@@ -57,8 +57,8 @@ agent-harness/
 | Fase | Hito | Capacidad | Estado |
 | :--- | :--- | :--- | :---: |
 | **01** | **Scaffolding y CI** | Estructura base, entrypoint CLI y suite de pruebas automatizadas | ✅ Completado |
-| **02** | **Persona y ODD** | Persona docente de Arquitecto Sénior, flujo ODD y estándares de commit | 🔄 En Progreso |
-| **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph y protocolo de memoria persistente Engram | ⏳ Planificado |
+| **02** | **Persona y ODD** | Persona docente de Arquitecto Sénior, flujo ODD y estándares de commit | ✅ Completado |
+| **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph y protocolo de memoria persistente Engram | 🔄 En Progreso |
 | **04** | **Skills y Adaptadores** | Registro declarativo de skills y adaptadores de runtime (Antigravity, Claude, Codex, Gemini) | ⏳ Planificado |
 | **05** | **Orquestación de Flotas** | Concurrencia multi-agente y coordinación distribuida mediante `herdr` | ⏳ Futuro |
 

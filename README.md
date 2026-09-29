@@ -57,8 +57,8 @@ agent-harness/
 | Phase | Milestone | Capability | Status |
 | :--- | :--- | :--- | :---: |
 | **01** | **Scaffolding & CI** | Clean architecture layout, CLI entrypoint, and automated test suite | ✅ Complete |
-| **02** | **Persona & ODD** | Senior Architect teaching persona, ODD workflow, and commit standards | 🔄 In Progress |
-| **03** | **Intelligence & Memory** | Codegraph AST MCP catalog and Engram persistent memory protocol | ⏳ Planned |
+| **02** | **Persona & ODD** | Senior Architect teaching persona, ODD workflow, and commit standards | ✅ Complete |
+| **03** | **Intelligence & Memory** | Codegraph AST MCP catalog and Engram persistent memory protocol | 🔄 In Progress |
 | **04** | **Skills & Adapters** | Declarative skills registry and runtime adapters (Antigravity, Claude, Codex, Gemini) | ⏳ Planned |
 | **05** | **Fleet Orchestration** | Multi-agent concurrency and distributed coordination via `herdr` | ⏳ Future |
 

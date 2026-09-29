@@ -29,6 +29,9 @@ done
 [[ -f "$REPO_ROOT/LICENSE" ]] || fail "Missing LICENSE"
 [[ -f "$REPO_ROOT/.gitignore" ]] || fail "Missing .gitignore"
 [[ -x "$HARNESS_CLI" ]] || fail "CLI $HARNESS_CLI is not executable"
+[[ -f "$REPO_ROOT/rules/persona.md" ]] || fail "Missing rules/persona.md"
+[[ -f "$REPO_ROOT/rules/odd.md" ]] || fail "Missing rules/odd.md"
+[[ -f "$REPO_ROOT/rules/conventions.md" ]] || fail "Missing rules/conventions.md"
 
 # 3. Validate syntax (bash -n)
 printf '  Validating bash syntax...\n'
