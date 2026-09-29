@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+PROGRAM_NAME=${0##*/}
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd -P)
+
+COMMAND=${1:-help}
+shift || true
+
+usage() {
+  cat <<EOF
+Usage:
+  $PROGRAM_NAME plan       Show the active agent harness configuration and components
+  $PROGRAM_NAME doctor     Verify local environment dependencies and toolchains
+  $PROGRAM_NAME status     Display runtime status and detected agent environments
+  $PROGRAM_NAME help       Show this help message
+EOF
+}
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+cmd_plan() {
+  printf '==> Agent Harness Plan\n'
+  printf '  Repository Root: %s\n' "$REPO_ROOT"
+  printf '  Architecture:    Ambient Multi-Agent Harness (ODD)\n\n'
+
+  printf '  Components:\n'
+  printf '    • Rules:   %s/rules\n' "$REPO_ROOT"
+  printf '    • MCP:     %s/mcp\n' "$REPO_ROOT"
+  printf '    • Skills:  %s/skills\n' "$REPO_ROOT"
+  printf '    • Tests:   %s/tests\n\n' "$REPO_ROOT"
+
+  printf '  Target Agent Runtimes:\n'
+  printf '    • Antigravity IDE & CLI\n'
+  printf '    • Claude Code\n'
+  printf '    • OpenAI Codex CLI\n'
+  printf '    • Gemini CLI\n'
+}
+
+cmd_doctor() {
+  local missing=0
+  local tool
+
+  printf '==> Checking core dependencies for Agent Harness...\n'
+
+  for tool in bash git curl; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      printf '  [OK] %s: %s\n' "$tool" "$(command -v "$tool")"
+    else
+      printf '  [FAIL] Missing required tool: %s\n' "$tool" >&2
+      missing=$((missing + 1))
+    fi
+  done
+
+  printf '\n==> Checking recommended developer tools...\n'
+  for tool in pnpm codegraph shellcheck; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      printf '  [OK] %s: %s\n' "$tool" "$(command -v "$tool")"
+    else
+      printf '  [INFO] Optional tool not found in PATH: %s\n' "$tool"
+    fi
+  done
+
+  if (( missing > 0 )); then
+    die "Doctor detected $missing missing required dependencies."
+  fi
+
+  printf '\n==> Doctor check passed successfully.\n'
+}
+
+cmd_status() {
+  printf '==> Agent Harness Environment Status\n'
+  printf '  Repository: %s\n' "$REPO_ROOT"
+  printf '  Branch:     %s\n' "$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
+  printf '  Git commit: %s\n' "$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")"
+}
+
+case "$COMMAND" in
+  plan)
+    cmd_plan
+    ;;
+  doctor)
+    cmd_doctor
+    ;;
+  status)
+    cmd_status
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    printf 'error: unknown command "%s"\n\n' "$COMMAND" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

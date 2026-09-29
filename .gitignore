@@ -1,0 +1,24 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*~
+
+# Caches & Logs
+.cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Node / JS dependencies (if any tools are bundled)
+node_modules/
+
+# Agent runtime states, local memory stores & local indexes
+.agents/
+.codegraph/
+.engram/
+.atl/
+.gemini/
+.codex/
