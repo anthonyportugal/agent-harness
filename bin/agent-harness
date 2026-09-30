@@ -418,11 +418,13 @@ cmd_setup() {
       antigravity-cli)
         local agy_cfg="${HOME}/.gemini/antigravity-cli/mcp_config.json"
         local agy_rules="${HOME}/.gemini/antigravity-cli/rules/agent-harness.md"
+        local agy_skills_json="${HOME}/.gemini/config/skills.json"
         if (( dry_run )); then
           printf '  [DRY-RUN] Would update MCP servers in %s\n' "$agy_cfg"
           printf '  [DRY-RUN] Would compile rules to %s\n' "$agy_rules"
+          printf '  [DRY-RUN] Would configure skills discovery in %s\n' "$agy_skills_json"
         else
-          mkdir -p "$(dirname "$agy_cfg")" "$(dirname "$agy_rules")"
+          mkdir -p "$(dirname "$agy_cfg")" "$(dirname "$agy_rules")" "$(dirname "$agy_skills_json")" "${HOME}/.gemini/antigravity-cli"
           if [[ -f "$agy_cfg" ]] && command -v jq >/dev/null 2>&1; then
             local tmp_agy
             tmp_agy=$(mktemp)
@@ -438,6 +440,19 @@ cmd_setup() {
           fi
           cmd_rules assemble "$agy_rules" >/dev/null
           printf '  [OK] Installed rules in %s\n' "$agy_rules"
+          cat > "$agy_skills_json" <<'EOF'
+{
+  "entries": [
+    {
+      "path": "~/.agents/skills"
+    }
+  ]
+}
+EOF
+          ln -sfn "$agy_skills_json" "${HOME}/.gemini/antigravity-cli/skills.json"
+          ln -sfn "${HOME}/.agents/skills" "${HOME}/.gemini/config/skills"
+          ln -sfn "${HOME}/.agents/skills" "${HOME}/.gemini/antigravity-cli/skills"
+          printf '  [OK] Configured skills discovery in %s\n' "$agy_skills_json"
         fi
         ;;
       claude)
