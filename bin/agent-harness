@@ -12,10 +12,12 @@ shift || true
 usage() {
   cat <<EOF
 Usage:
-  $PROGRAM_NAME plan       Show the active agent harness configuration and components
-  $PROGRAM_NAME doctor     Verify local environment dependencies and toolchains
-  $PROGRAM_NAME status     Display runtime status and detected agent environments
-  $PROGRAM_NAME help       Show this help message
+  $PROGRAM_NAME plan                     Show active agent harness architecture and components
+  $PROGRAM_NAME doctor                   Verify local dependencies, toolchains, and agent tools
+  $PROGRAM_NAME status                   Display repository and runtime status
+  $PROGRAM_NAME mcp list                 List registered MCP servers in catalog
+  $PROGRAM_NAME mcp config [agent]       Export merged MCP config (generic|claude|antigravity)
+  $PROGRAM_NAME help                     Show this help message
 EOF
 }
 
@@ -25,13 +27,20 @@ die() {
 }
 
 cmd_plan() {
-  printf '==> Agent Harness Plan\n'
+  printf '==> Agent Harness Architecture Plan\n'
   printf '  Repository Root: %s\n' "$REPO_ROOT"
-  printf '  Architecture:    Ambient Multi-Agent Harness (ODD)\n\n'
+  printf '  Architecture:    Ambient Multi-Agent Harness (ODD + 4R + AST + Memory)\n\n'
 
   printf '  Components:\n'
   printf '    • Rules:   %s/rules\n' "$REPO_ROOT"
+  printf '      - persona.md      (Senior Architect & Mentor identity)\n'
+  printf '      - odd.md          (Organic Driven Development lifecycle)\n'
+  printf '      - conventions.md  (Gitmoji, pnpm, AUR, Context7 standards)\n'
+  printf '      - memory.md       (Engram persistent memory protocol)\n'
+  printf '      - review-4r.md    (Risk, Readability, Reliability, Resilience)\n'
   printf '    • MCP:     %s/mcp\n' "$REPO_ROOT"
+  printf '      - codegraph.json  (AST code intelligence on stdio)\n'
+  printf '      - engram.json     (Persistent cross-session memory on stdio)\n'
   printf '    • Skills:  %s/skills\n' "$REPO_ROOT"
   printf '    • Tests:   %s/tests\n\n' "$REPO_ROOT"
 
@@ -46,28 +55,38 @@ cmd_doctor() {
   local missing=0
   local tool
 
-  printf '==> Checking core dependencies for Agent Harness...\n'
-
+  printf '==> Checking core system dependencies...\n'
   for tool in bash git curl; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %s: %s\n' "$tool" "$(command -v "$tool")"
+      printf '  [OK] %-12s %s\n' "$tool" "$(command -v "$tool")"
     else
       printf '  [FAIL] Missing required tool: %s\n' "$tool" >&2
       missing=$((missing + 1))
     fi
   done
 
-  printf '\n==> Checking recommended developer tools...\n'
-  for tool in pnpm codegraph shellcheck; do
+  printf '\n==> Checking agent & semantic toolchains...\n'
+  for tool in pnpm codegraph engram skills jq shellcheck; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %s: %s\n' "$tool" "$(command -v "$tool")"
+      printf '  [OK] %-12s %s\n' "$tool" "$(command -v "$tool")"
     else
       printf '  [INFO] Optional tool not found in PATH: %s\n' "$tool"
     fi
   done
 
+  printf '\n==> Checking repository rules and MCP catalog integrity...\n'
+  local file
+  for file in rules/persona.md rules/odd.md rules/conventions.md rules/memory.md rules/review-4r.md mcp/codegraph.json mcp/engram.json; do
+    if [[ -f "$REPO_ROOT/$file" ]]; then
+      printf '  [OK] %s\n' "$file"
+    else
+      printf '  [FAIL] Missing required file: %s\n' "$file" >&2
+      missing=$((missing + 1))
+    fi
+  done
+
   if (( missing > 0 )); then
-    die "Doctor detected $missing missing required dependencies."
+    die "Doctor detected $missing missing dependencies or files."
   fi
 
   printf '\n==> Doctor check passed successfully.\n'
@@ -80,6 +99,77 @@ cmd_status() {
   printf '  Git commit: %s\n' "$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")"
 }
 
+cmd_mcp() {
+  local subcmd=${1:-list}
+  shift || true
+
+  case "$subcmd" in
+    list)
+      printf '==> Registered MCP Servers in Harness Catalog:\n'
+      local json_file name desc
+      for json_file in "$REPO_ROOT"/mcp/*.json; do
+        [[ -e "$json_file" ]] || continue
+        name=$(basename "$json_file" .json)
+        if command -v jq >/dev/null 2>&1; then
+          desc=$(jq -r '.description // "No description"' "$json_file")
+        else
+          desc="MCP configuration file: $json_file"
+        fi
+        printf '  • %-12s %s\n' "$name" "$desc"
+      done
+      ;;
+    config)
+      local target=${1:-generic}
+      case "$target" in
+        generic|claude|antigravity)
+          if command -v jq >/dev/null 2>&1; then
+            jq -n \
+              --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+              --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+              '{
+                mcpServers: {
+                  codegraph: {
+                    type: $cg[0].transport,
+                    command: $cg[0].command,
+                    args: $cg[0].args
+                  },
+                  engram: {
+                    type: $eg[0].transport,
+                    command: $eg[0].command,
+                    args: $eg[0].args
+                  }
+                }
+              }'
+          else
+            cat <<'JSON'
+{
+  "mcpServers": {
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": ["serve", "--mcp"]
+    },
+    "engram": {
+      "type": "stdio",
+      "command": "engram",
+      "args": ["mcp", "--tools=agent"]
+    }
+  }
+}
+JSON
+          fi
+          ;;
+        *)
+          die "Unknown target agent '$target'. Supported: generic, claude, antigravity"
+          ;;
+      esac
+      ;;
+    *)
+      die "Unknown mcp subcommand '$subcmd'. Supported: list, config"
+      ;;
+  esac
+}
+
 case "$COMMAND" in
   plan)
     cmd_plan
@@ -89,6 +179,9 @@ case "$COMMAND" in
     ;;
   status)
     cmd_status
+    ;;
+  mcp)
+    cmd_mcp "$@"
     ;;
   help|-h|--help)
     usage

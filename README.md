@@ -12,7 +12,7 @@
 
 *Read this in other languages:* [Español](README.es.md)
 
-Modular, reproducible, and vendor-agnostic development harness for AI coding agents. Establishes a standardized ambient layer for agent behavior, semantic code intelligence (AST knowledge graphs), persistent memory protocols, and curated skills across any workstation.
+Modular, reproducible, and vendor-agnostic development harness for AI coding agents. Establishes a standardized ambient layer for agent behavior, semantic code intelligence (AST knowledge graphs), persistent memory protocols, 4R architectural audits, and curated skills across any workstation.
 
 > [!TIP]
 > 🧩 **Modular Dotfiles Ecosystem:**  
@@ -26,6 +26,7 @@ Modular, reproducible, and vendor-agnostic development harness for AI coding age
 
 - 🧠 **Senior Architect Persona:** Enforces a teaching-first philosophy ("Concepts > Code") where the agent explains the architectural *why* before producing code.
 - 📐 **Organic Driven Development (ODD):** Strict 5-phase engineering lifecycle (Explore ➔ Spec ➔ Tasks ➔ Apply ➔ Verify) preventing hasty, unverified diffs.
+- 🔍 **4R Architectural Review:** Objective audit framework evaluating Risk (security), Readability (maintainability), Reliability (contracts & tests), and Resilience (fault tolerance).
 - 🌳 **Semantic Code Intelligence:** Declarative MCP integration with [Codegraph](https://github.com/anthonyportugal/codegraph) for instant call-graph exploration, caller/callee paths, and blast radius analysis via local SQLite/AST.
 - 💾 **Persistent Cross-Session Memory:** Engram memory protocol preserving architectural decisions, gotchas, and bug root causes across context compactions and separate sessions.
 - 🎯 **Ambient by Default, Surgical by Activation:** Zero project-level configuration needed. Active projects enable AST graph indexing with a single `codegraph init`.
@@ -39,9 +40,16 @@ Modular, reproducible, and vendor-agnostic development harness for AI coding age
 ```text
 agent-harness/
 ├── bin/
-│   └── agent-harness        # Management CLI (plan, doctor, status)
-├── rules/                   # Master agent instructions (ODD, persona, conventions)
-├── mcp/                     # Declarative MCP server catalog (Codegraph, Context7)
+│   └── agent-harness        # Management CLI (plan, doctor, status, mcp)
+├── rules/                   # Master agent instructions
+│   ├── persona.md           # Senior Architect & Mentor persona
+│   ├── odd.md               # Organic Driven Development workflow
+│   ├── conventions.md       # Engineering conventions & toolchain standards
+│   ├── memory.md            # Persistent memory protocol (Engram)
+│   └── review-4r.md         # 4R Architectural Review framework
+├── mcp/                     # Declarative MCP server catalog
+│   ├── codegraph.json       # AST code intelligence on stdio
+│   └── engram.json          # Persistent memory database on stdio
 ├── skills/                  # Curated skills registry and installation manifests
 ├── tests/
 │   └── smoke.sh             # Local automated smoke tests and static analysis
@@ -58,7 +66,7 @@ agent-harness/
 | :--- | :--- | :--- | :---: |
 | **01** | **Scaffolding & CI** | Clean architecture layout, CLI entrypoint, and automated test suite | ✅ Complete |
 | **02** | **Persona & ODD** | Senior Architect teaching persona, ODD workflow, and commit standards | ✅ Complete |
-| **03** | **Intelligence & Memory** | Codegraph AST MCP catalog and Engram persistent memory protocol | 🔄 In Progress |
+| **03** | **Intelligence & Memory** | Codegraph AST MCP catalog, Engram memory protocol, and 4R review framework | ✅ Complete |
 | **04** | **Skills & Adapters** | Declarative skills registry and runtime adapters (Antigravity, Claude, Codex, Gemini) | ⏳ Planned |
 | **05** | **Fleet Orchestration** | Multi-agent concurrency and distributed coordination via `herdr` | ⏳ Future |
 
@@ -72,11 +80,17 @@ The repository includes a standalone management CLI to audit and inspect the amb
 # Display the active agent harness configuration and component paths
 ./bin/agent-harness plan
 
-# Audit local toolchains and dependencies (git, pnpm, codegraph, shellcheck)
+# Audit local toolchains and dependencies (git, pnpm, codegraph, engram, shellcheck)
 ./bin/agent-harness doctor
 
 # Display current repository status and Git metadata
 ./bin/agent-harness status
+
+# List available MCP servers in catalog
+./bin/agent-harness mcp list
+
+# Export merged MCP configuration snippet for agent clients
+./bin/agent-harness mcp config generic
 ```
 
 ---

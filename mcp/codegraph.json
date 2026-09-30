@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "codegraph",
+  "description": "Code intelligence and knowledge graph for codebases (symbols, callers, callees, impact analysis)",
+  "transport": "stdio",
+  "command": "codegraph",
+  "args": [
+    "serve",
+    "--mcp"
+  ],
+  "env": {},
+  "capabilities": {
+    "tools": true,
+    "resources": false
+  },
+  "index_dir": ".codegraph"
+}

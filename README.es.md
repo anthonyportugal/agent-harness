@@ -12,7 +12,7 @@
 
 *Leer esto en otros idiomas:* [English](README.md)
 
-Arnés modular, reproducible y agnóstico de proveedor para agentes de desarrollo e IA. Establece una capa ambiental estandarizada para el comportamiento de agentes, inteligencia de código semántica (grafos de conocimiento AST), protocolos de memoria persistente y habilidades seleccionadas en cualquier estación de trabajo.
+Arnés modular, reproducible y agnóstico de proveedor para agentes de desarrollo e IA. Establece una capa ambiental estandarizada para el comportamiento de agentes, inteligencia de código semántica (grafos de conocimiento AST), protocolos de memoria persistente, auditorías de arquitectura 4R y habilidades seleccionadas en cualquier estación de trabajo.
 
 > [!TIP]
 > 🧩 **Ecosistema Modular de Dotfiles:**  
@@ -26,6 +26,7 @@ Arnés modular, reproducible y agnóstico de proveedor para agentes de desarroll
 
 - 🧠 **Persona de Arquitecto Sénior:** Impone una filosofía docente ("Conceptos > Código") donde el agente explica el *porqué* arquitectónico antes de generar soluciones.
 - 📐 **Desarrollo Dirigido Orgánico (ODD):** Ciclo de vida estricto de 5 fases (Explorar ➔ Spec ➔ Tareas ➔ Aplicar ➔ Verificar) para evitar modificaciones apresuradas y sin validar.
+- 🔍 **Revisión Arquitectónica 4R:** Marco de auditoría objetivo que evalúa Riesgo (seguridad), Legibilidad (mantenibilidad), Fiabilidad (contratos y pruebas) y Resiliencia (tolerancia a fallos).
 - 🌳 **Inteligencia Semántica de Código:** Integración MCP declarativa con [Codegraph](https://github.com/anthonyportugal/codegraph) para exploración instantánea de grafos de llamadas, dependencias y análisis de impacto mediante AST y SQLite local.
 - 💾 **Memoria Persistente entre Sesiones:** Protocolo de memoria Engram para preservar decisiones de arquitectura, gotchas y causas raíz de errores frente a compactaciones de contexto y sesiones independientes.
 - 🎯 **Ambiental por Defecto, Quirúrgico por Demanda:** Cero configuración en proyectos individuales. Repositorios activos activan la indexación AST con un simple comando: `codegraph init`.
@@ -39,9 +40,16 @@ Arnés modular, reproducible y agnóstico de proveedor para agentes de desarroll
 ```text
 agent-harness/
 ├── bin/
-│   └── agent-harness        # CLI de gestión (plan, doctor, status)
-├── rules/                   # Instrucciones maestras (ODD, persona, convenciones)
-├── mcp/                     # Catálogo declarativo de servidores MCP (Codegraph, Context7)
+│   └── agent-harness        # CLI de gestión (plan, doctor, status, mcp)
+├── rules/                   # Instrucciones maestras para agentes
+│   ├── persona.md           # Persona docente de Arquitecto Sénior
+│   ├── odd.md               # Flujo Organic Driven Development
+│   ├── conventions.md       # Convenciones técnicas y de herramientas
+│   ├── memory.md            # Protocolo de memoria persistente (Engram)
+│   └── review-4r.md         # Marco de revisión arquitectónica 4R
+├── mcp/                     # Catálogo declarativo de servidores MCP
+│   ├── codegraph.json       # Inteligencia AST de código en stdio
+│   └── engram.json          # Base de memoria persistente en stdio
 ├── skills/                  # Registro de habilidades y manifiestos de instalación
 ├── tests/
 │   └── smoke.sh             # Suite de pruebas automatizadas y análisis estático
@@ -58,7 +66,7 @@ agent-harness/
 | :--- | :--- | :--- | :---: |
 | **01** | **Scaffolding y CI** | Estructura base, entrypoint CLI y suite de pruebas automatizadas | ✅ Completado |
 | **02** | **Persona y ODD** | Persona docente de Arquitecto Sénior, flujo ODD y estándares de commit | ✅ Completado |
-| **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph y protocolo de memoria persistente Engram | 🔄 En Progreso |
+| **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph, protocolo de memoria Engram y marco 4R | ✅ Completado |
 | **04** | **Skills y Adaptadores** | Registro declarativo de skills y adaptadores de runtime (Antigravity, Claude, Codex, Gemini) | ⏳ Planificado |
 | **05** | **Orquestación de Flotas** | Concurrencia multi-agente y coordinación distribuida mediante `herdr` | ⏳ Futuro |
 
@@ -72,11 +80,17 @@ El repositorio incluye una CLI independiente para auditar e inspeccionar el ento
 # Mostrar la configuración activa del arnés y las rutas de sus componentes
 ./bin/agent-harness plan
 
-# Auditar dependencias y herramientas locales (git, pnpm, codegraph, shellcheck)
+# Auditar dependencias y herramientas locales (git, pnpm, codegraph, engram, shellcheck)
 ./bin/agent-harness doctor
 
 # Mostrar el estado actual del repositorio y metadatos de Git
 ./bin/agent-harness status
+
+# Listar servidores MCP registrados en el catálogo
+./bin/agent-harness mcp list
+
+# Exportar configuración MCP consolidada para agentes
+./bin/agent-harness mcp config generic
 ```
 
 ---

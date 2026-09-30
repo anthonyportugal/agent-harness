@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "engram",
+  "description": "Cross-session persistent memory database for decisions, architecture patterns, and bug root causes",
+  "transport": "stdio",
+  "command": "engram",
+  "args": [
+    "mcp",
+    "--tools=agent"
+  ],
+  "env": {},
+  "capabilities": {
+    "tools": true,
+    "resources": false
+  },
+  "index_dir": ".engram"
+}
