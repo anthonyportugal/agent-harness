@@ -56,10 +56,10 @@ cmd_plan() {
   printf '    • Tests:   %s/tests\n\n' "$REPO_ROOT"
 
   printf '  Target Agent CLIs:\n'
-  printf '    • Antigravity CLI (antigravity-cli)\n'
-  printf '    • Claude Code CLI (claude)\n'
-  printf '    • OpenAI Codex CLI (codex)\n'
-  printf '    • OpenCode CLI (opencode)\n'
+  printf '    • Antigravity CLI (antigravity-cli / agy)  [https://antigravity.google/cli/install.sh]\n'
+  printf '    • Claude Code CLI (claude)               [https://claude.ai/install.sh]\n'
+  printf '    • OpenAI Codex CLI (codex)               [https://chatgpt.com/codex/install.sh]\n'
+  printf '    • OpenCode CLI (opencode)                [https://opencode.ai/v2/install]\n'
 }
 
 cmd_doctor() {
@@ -86,11 +86,38 @@ cmd_doctor() {
   done
 
   printf '\n==> Checking detected Agent CLIs in system...\n'
+  local bin_path
+  local -A AGENT_INSTALL_URLS=(
+    ["antigravity"]="curl -fsSL https://antigravity.google/cli/install.sh | bash"
+    ["claude"]="curl -fsSL https://claude.ai/install.sh | bash"
+    ["codex"]="curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+    ["opencode"]="curl -fsSL https://opencode.ai/v2/install | bash"
+  )
+
   for tool in antigravity claude codex opencode; do
-    if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
+    bin_path=""
+    if [[ "$tool" == "antigravity" ]]; then
+      if command -v agy >/dev/null 2>&1; then
+        bin_path=$(command -v agy)
+      elif command -v antigravity >/dev/null 2>&1; then
+        bin_path=$(command -v antigravity)
+      fi
+    elif [[ "$tool" == "opencode" ]]; then
+      if command -v opencode >/dev/null 2>&1; then
+        bin_path=$(command -v opencode)
+      elif command -v opencode2 >/dev/null 2>&1; then
+        bin_path=$(command -v opencode2)
+      elif [[ -x "${HOME}/.opencode/bin/opencode" ]]; then
+        bin_path="${HOME}/.opencode/bin/opencode"
+      fi
+    elif command -v "$tool" >/dev/null 2>&1; then
+      bin_path=$(command -v "$tool")
+    fi
+
+    if [[ -n "$bin_path" ]]; then
+      printf '  [OK] %-16s %s\n' "$tool" "$bin_path"
     else
-      printf '  [INFO] Agent CLI not installed in PATH: %s\n' "$tool"
+      printf '  [INFO] %-14s not installed in PATH (Install: %s)\n' "$tool" "${AGENT_INSTALL_URLS[$tool]}"
     fi
   done
 
@@ -459,12 +486,8 @@ cmd_setup() {
             cmd_mcp config codex > "$codex_cfg"
             printf '  [OK] Created %s\n' "$codex_cfg"
           fi
-          if [[ -L "$codex_rules" ]]; then
-            printf '  [INFO] %s is a symlink (managed by dotfiles-private); preserving.\n' "$codex_rules"
-          else
-            cmd_rules assemble "$codex_rules" >/dev/null
-            printf '  [OK] Installed rules in %s\n' "$codex_rules"
-          fi
+          cmd_rules assemble "$codex_rules" >/dev/null
+          printf '  [OK] Installed rules in %s\n' "$codex_rules"
         fi
         ;;
       opencode)
