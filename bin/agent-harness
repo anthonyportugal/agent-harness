@@ -12,12 +12,22 @@ shift || true
 usage() {
   cat <<EOF
 Usage:
-  $PROGRAM_NAME plan                     Show active agent harness architecture and components
-  $PROGRAM_NAME doctor                   Verify local dependencies, toolchains, and agent tools
-  $PROGRAM_NAME status                   Display repository and runtime status
-  $PROGRAM_NAME mcp list                 List registered MCP servers in catalog
-  $PROGRAM_NAME mcp config [agent]       Export merged MCP config (generic|claude|antigravity)
-  $PROGRAM_NAME help                     Show this help message
+  $PROGRAM_NAME plan                       Show active harness architecture and target runtimes
+  $PROGRAM_NAME doctor                     Verify local dependencies, toolchains, and catalog
+  $PROGRAM_NAME status                     Display repository and runtime status
+  $PROGRAM_NAME rules assemble [FILE]      Compile modular rules into a single markdown document
+  $PROGRAM_NAME mcp list                   List registered MCP servers in catalog
+  $PROGRAM_NAME mcp config [TARGET]        Export MCP config (generic|claude|antigravity-cli|codex|opencode)
+  $PROGRAM_NAME skills list                List curated ambient skills from manifest
+  $PROGRAM_NAME skills doctor              Verify status of curated skills in ~/.agents/skills
+  $PROGRAM_NAME skills sync                Sync curated skills to ~/.agents/skills
+  $PROGRAM_NAME setup [OPTIONS]            Setup and link harness for AI coding agent CLIs
+
+Setup Options:
+  --target TARGET   Agent target: antigravity-cli | claude | codex | opencode | all (default: all)
+  --deps            Install missing CLI dependencies (codegraph, engram, skills) via pnpm
+  --dry-run         Preview file changes and configurations without modifying disk
+  -h, --help        Show this help message
 EOF
 }
 
@@ -29,7 +39,7 @@ die() {
 cmd_plan() {
   printf '==> Agent Harness Architecture Plan\n'
   printf '  Repository Root: %s\n' "$REPO_ROOT"
-  printf '  Architecture:    Ambient Multi-Agent Harness (ODD + 4R + AST + Memory)\n\n'
+  printf '  Architecture:    Ambient Multi-Agent Harness (ODD + 4R + AST + Memory + Skills)\n\n'
 
   printf '  Components:\n'
   printf '    • Rules:   %s/rules\n' "$REPO_ROOT"
@@ -42,13 +52,14 @@ cmd_plan() {
   printf '      - codegraph.json  (AST code intelligence on stdio)\n'
   printf '      - engram.json     (Persistent cross-session memory on stdio)\n'
   printf '    • Skills:  %s/skills\n' "$REPO_ROOT"
+  printf '      - manifest.json   (Curated skills for documentation, gitmoji, and discovery)\n'
   printf '    • Tests:   %s/tests\n\n' "$REPO_ROOT"
 
-  printf '  Target Agent Runtimes:\n'
-  printf '    • Antigravity IDE & CLI\n'
-  printf '    • Claude Code\n'
-  printf '    • OpenAI Codex CLI\n'
-  printf '    • Gemini CLI\n'
+  printf '  Target Agent CLIs:\n'
+  printf '    • Antigravity CLI (antigravity-cli)\n'
+  printf '    • Claude Code CLI (claude)\n'
+  printf '    • OpenAI Codex CLI (codex)\n'
+  printf '    • OpenCode CLI (opencode)\n'
 }
 
 cmd_doctor() {
@@ -58,7 +69,7 @@ cmd_doctor() {
   printf '==> Checking core system dependencies...\n'
   for tool in bash git curl; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %-12s %s\n' "$tool" "$(command -v "$tool")"
+      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
     else
       printf '  [FAIL] Missing required tool: %s\n' "$tool" >&2
       missing=$((missing + 1))
@@ -68,15 +79,24 @@ cmd_doctor() {
   printf '\n==> Checking agent & semantic toolchains...\n'
   for tool in pnpm codegraph engram skills jq shellcheck; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %-12s %s\n' "$tool" "$(command -v "$tool")"
+      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
     else
       printf '  [INFO] Optional tool not found in PATH: %s\n' "$tool"
     fi
   done
 
-  printf '\n==> Checking repository rules and MCP catalog integrity...\n'
+  printf '\n==> Checking detected Agent CLIs in system...\n'
+  for tool in antigravity claude codex opencode; do
+    if command -v "$tool" >/dev/null 2>&1; then
+      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
+    else
+      printf '  [INFO] Agent CLI not installed in PATH: %s\n' "$tool"
+    fi
+  done
+
+  printf '\n==> Checking repository rules and catalog integrity...\n'
   local file
-  for file in rules/persona.md rules/odd.md rules/conventions.md rules/memory.md rules/review-4r.md mcp/codegraph.json mcp/engram.json; do
+  for file in rules/persona.md rules/odd.md rules/conventions.md rules/memory.md rules/review-4r.md mcp/codegraph.json mcp/engram.json skills/manifest.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       printf '  [OK] %s\n' "$file"
     else
@@ -97,6 +117,51 @@ cmd_status() {
   printf '  Repository: %s\n' "$REPO_ROOT"
   printf '  Branch:     %s\n' "$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
   printf '  Git commit: %s\n' "$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")"
+}
+
+cmd_rules() {
+  local subcmd=${1:-assemble}
+  shift || true
+
+  case "$subcmd" in
+    assemble)
+      local out_file=${1:-}
+      local buffer
+      buffer=$(cat <<EOF
+# Unified AI Agent Instructions & Governance
+<!-- Compiled automatically by agent-harness (https://github.com/anthonyportugal/agent-harness) -->
+
+$(cat "$REPO_ROOT/rules/persona.md")
+
+---
+
+$(cat "$REPO_ROOT/rules/odd.md")
+
+---
+
+$(cat "$REPO_ROOT/rules/conventions.md")
+
+---
+
+$(cat "$REPO_ROOT/rules/memory.md")
+
+---
+
+$(cat "$REPO_ROOT/rules/review-4r.md")
+EOF
+)
+      if [[ -n "$out_file" ]]; then
+        mkdir -p "$(dirname "$out_file")"
+        printf '%s\n' "$buffer" > "$out_file"
+        printf '==> Assembled master rules written to %s\n' "$out_file"
+      else
+        printf '%s\n' "$buffer"
+      fi
+      ;;
+    *)
+      die "Unknown rules subcommand '$subcmd'. Supported: assemble"
+      ;;
+  esac
 }
 
 cmd_mcp() {
@@ -121,7 +186,7 @@ cmd_mcp() {
     config)
       local target=${1:-generic}
       case "$target" in
-        generic|claude|antigravity)
+        generic|claude|antigravity-cli|antigravity|codex|opencode)
           if command -v jq >/dev/null 2>&1; then
             jq -n \
               --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
@@ -160,7 +225,7 @@ JSON
           fi
           ;;
         *)
-          die "Unknown target agent '$target'. Supported: generic, claude, antigravity"
+          die "Unknown target agent '$target'. Supported: generic, claude, antigravity-cli, codex, opencode"
           ;;
       esac
       ;;
@@ -168,6 +233,249 @@ JSON
       die "Unknown mcp subcommand '$subcmd'. Supported: list, config"
       ;;
   esac
+}
+
+cmd_skills() {
+  local subcmd=${1:-list}
+  shift || true
+  local manifest="$REPO_ROOT/skills/manifest.json"
+
+  [[ -f "$manifest" ]] || die "Missing skills manifest: $manifest"
+
+  case "$subcmd" in
+    list)
+      printf '==> Curated Ambient Skills Manifest:\n'
+      if command -v jq >/dev/null 2>&1; then
+        jq -r '.skills[] | "  • " + (.name | rpad(22)) + (.description // "")' "$manifest" 2>/dev/null || \
+          jq -r '.skills[] | "  • " + .name + ": " + .description' "$manifest"
+      else
+        grep '"name":' "$manifest"
+      fi
+      ;;
+    doctor)
+      printf '==> Verifying curated skills in ~/.agents/skills...\n'
+      local skills_dir="${HOME}/.agents/skills"
+      if [[ ! -d "$skills_dir" ]]; then
+        printf '  [INFO] ~/.agents/skills directory does not exist yet.\n'
+        return 0
+      fi
+      if command -v jq >/dev/null 2>&1; then
+        local skill_name
+        while read -r skill_name; do
+          if [[ -d "$skills_dir/$skill_name" ]]; then
+            printf '  [OK] Skill installed: %s\n' "$skill_name"
+          else
+            printf '  [INFO] Skill not installed in ~/.agents/skills: %s\n' "$skill_name"
+          fi
+        done < <(jq -r '.skills[].name' "$manifest")
+      fi
+      ;;
+    sync)
+      printf '==> Syncing curated skills to ~/.agents/skills...\n'
+      local skills_dir="${HOME}/.agents/skills"
+      mkdir -p "$skills_dir"
+      if command -v pnpm >/dev/null 2>&1; then
+        local skill_src skill_name
+        while IFS='|' read -r skill_name skill_src; do
+          printf '  Syncing skill: %s (%s)...\n' "$skill_name" "$skill_src"
+          pnpm dlx skills-cli add "$skill_src" --skill "$skill_name" --yes || \
+            printf '  [WARN] Failed to sync %s automatically. Run manually.\n' "$skill_name"
+        done < <(jq -r '.skills[] | .name + "|" + .source' "$manifest")
+      else
+        die "pnpm is required to execute skills-cli via pnpm dlx."
+      fi
+      ;;
+    *)
+      die "Unknown skills subcommand '$subcmd'. Supported: list, doctor, sync"
+      ;;
+  esac
+}
+
+cmd_setup() {
+  local target="all"
+  local install_deps=0
+  local dry_run=0
+
+  while (( $# > 0 )); do
+    case "$1" in
+      --target)
+        target=${2:-all}
+        shift 2
+        ;;
+      --target=*)
+        target=${1#*=}
+        shift
+        ;;
+      --deps)
+        install_deps=1
+        shift
+        ;;
+      --dry-run)
+        dry_run=1
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        die "Unknown setup option '$1'"
+        ;;
+    esac
+  done
+
+  printf '==> Agent Harness Setup Initiated\n'
+  printf '  Target:  %s\n' "$target"
+  printf '  Deps:    %s\n' "$(( install_deps ? 1 : 0 ))"
+  printf '  Dry Run: %s\n\n' "$(( dry_run ? 1 : 0 ))"
+
+  if (( install_deps )); then
+    printf '==> Ensuring CLI dependencies via pnpm...\n'
+    if command -v pnpm >/dev/null 2>&1; then
+      if (( dry_run )); then
+        printf '  [DRY-RUN] Would install @colbymchenry/codegraph and skills-cli globally\n'
+      else
+        pnpm add -g @colbymchenry/codegraph skills-cli || printf '  [WARN] pnpm global install failed; check permissions\n'
+      fi
+    else
+      printf '  [WARN] pnpm not found; please install pnpm first\n'
+    fi
+  fi
+
+  local targets_to_run=()
+  case "$target" in
+    all)
+      targets_to_run=("antigravity-cli" "claude" "codex" "opencode")
+      ;;
+    antigravity-cli|antigravity)
+      targets_to_run=("antigravity-cli")
+      ;;
+    claude)
+      targets_to_run=("claude")
+      ;;
+    codex)
+      targets_to_run=("codex")
+      ;;
+    opencode)
+      targets_to_run=("opencode")
+      ;;
+    *)
+      die "Unknown target '$target'. Supported: antigravity-cli, claude, codex, opencode, all"
+      ;;
+  esac
+
+  local current_target
+  for current_target in "${targets_to_run[@]}"; do
+    printf '==> Configuring Agent Runtime: %s...\n' "$current_target"
+    case "$current_target" in
+      antigravity-cli)
+        local agy_cfg="${HOME}/.gemini/antigravity-cli/mcp_config.json"
+        local agy_rules="${HOME}/.gemini/antigravity-cli/rules/agent-harness.md"
+        if (( dry_run )); then
+          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$agy_cfg"
+          printf '  [DRY-RUN] Would compile rules to %s\n' "$agy_rules"
+        else
+          mkdir -p "$(dirname "$agy_cfg")" "$(dirname "$agy_rules")"
+          if [[ -f "$agy_cfg" ]] && command -v jq >/dev/null 2>&1; then
+            local tmp_agy
+            tmp_agy=$(mktemp)
+            jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+               --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
+                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
+               "$agy_cfg" > "$tmp_agy" && mv "$tmp_agy" "$agy_cfg"
+            printf '  [OK] Merged MCP servers into %s\n' "$agy_cfg"
+          else
+            cmd_mcp config antigravity-cli > "$agy_cfg"
+            printf '  [OK] Created %s\n' "$agy_cfg"
+          fi
+          cmd_rules assemble "$agy_rules" >/dev/null
+          printf '  [OK] Installed rules in %s\n' "$agy_rules"
+        fi
+        ;;
+      claude)
+        local claude_cfg="${HOME}/.claude.json"
+        local claude_rules="${HOME}/.claude/CLAUDE.md"
+        if (( dry_run )); then
+          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$claude_cfg"
+          printf '  [DRY-RUN] Would compile master rules to %s\n' "$claude_rules"
+        else
+          mkdir -p "$(dirname "$claude_rules")"
+          if [[ -f "$claude_cfg" ]] && command -v jq >/dev/null 2>&1; then
+            local tmp_claude
+            tmp_claude=$(mktemp)
+            jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+               --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
+                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
+               "$claude_cfg" > "$tmp_claude" && mv "$tmp_claude" "$claude_cfg"
+            printf '  [OK] Merged MCP servers into %s\n' "$claude_cfg"
+          else
+            cmd_mcp config claude > "$claude_cfg"
+            printf '  [OK] Created %s\n' "$claude_cfg"
+          fi
+          cmd_rules assemble "$claude_rules" >/dev/null
+          printf '  [OK] Installed rules in %s\n' "$claude_rules"
+        fi
+        ;;
+      codex)
+        local codex_cfg="${HOME}/.codex/config.json"
+        local codex_rules="${HOME}/.codex/AGENTS.md"
+        if (( dry_run )); then
+          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$codex_cfg"
+          printf '  [DRY-RUN] Would verify or update rules in %s\n' "$codex_rules"
+        else
+          mkdir -p "$(dirname "$codex_cfg")"
+          if [[ -f "$codex_cfg" ]] && command -v jq >/dev/null 2>&1; then
+            local tmp_codex
+            tmp_codex=$(mktemp)
+            jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+               --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
+                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
+               "$codex_cfg" > "$tmp_codex" && mv "$tmp_codex" "$codex_cfg"
+            printf '  [OK] Merged MCP servers into %s\n' "$codex_cfg"
+          else
+            cmd_mcp config codex > "$codex_cfg"
+            printf '  [OK] Created %s\n' "$codex_cfg"
+          fi
+          if [[ -L "$codex_rules" ]]; then
+            printf '  [INFO] %s is a symlink (managed by dotfiles-private); preserving.\n' "$codex_rules"
+          else
+            cmd_rules assemble "$codex_rules" >/dev/null
+            printf '  [OK] Installed rules in %s\n' "$codex_rules"
+          fi
+        fi
+        ;;
+      opencode)
+        local opencode_cfg="${HOME}/.config/opencode/opencode.json"
+        local opencode_rules="${HOME}/.config/opencode/AGENTS.md"
+        if (( dry_run )); then
+          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$opencode_cfg"
+          printf '  [DRY-RUN] Would compile rules to %s\n' "$opencode_rules"
+        else
+          mkdir -p "$(dirname "$opencode_cfg")"
+          if [[ -f "$opencode_cfg" ]] && command -v jq >/dev/null 2>&1; then
+            local tmp_opencode
+            tmp_opencode=$(mktemp)
+            jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+               --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
+                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
+               "$opencode_cfg" > "$tmp_opencode" && mv "$tmp_opencode" "$opencode_cfg"
+            printf '  [OK] Merged MCP servers into %s\n' "$opencode_cfg"
+          else
+            cmd_mcp config opencode > "$opencode_cfg"
+            printf '  [OK] Created %s\n' "$opencode_cfg"
+          fi
+          cmd_rules assemble "$opencode_rules" >/dev/null
+          printf '  [OK] Installed rules in %s\n' "$opencode_rules"
+        fi
+        ;;
+    esac
+  done
+
+  printf '\n==> Setup completed successfully.\n'
 }
 
 case "$COMMAND" in
@@ -180,8 +488,17 @@ case "$COMMAND" in
   status)
     cmd_status
     ;;
+  rules)
+    cmd_rules "$@"
+    ;;
   mcp)
     cmd_mcp "$@"
+    ;;
+  skills)
+    cmd_skills "$@"
+    ;;
+  setup)
+    cmd_setup "$@"
     ;;
   help|-h|--help)
     usage

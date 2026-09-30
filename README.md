@@ -12,7 +12,7 @@
 
 *Read this in other languages:* [Español](README.es.md)
 
-Modular, reproducible, and vendor-agnostic development harness for AI coding agents. Establishes a standardized ambient layer for agent behavior, semantic code intelligence (AST knowledge graphs), persistent memory protocols, 4R architectural audits, and curated skills across any workstation.
+Modular, reproducible, and vendor-agnostic development harness for AI coding agent CLIs. Establishes a standardized ambient layer for agent behavior, semantic code intelligence (AST knowledge graphs), persistent memory protocols, 4R architectural audits, and curated skills across any workstation.
 
 > [!TIP]
 > 🧩 **Modular Dotfiles Ecosystem:**  
@@ -27,8 +27,9 @@ Modular, reproducible, and vendor-agnostic development harness for AI coding age
 - 🧠 **Senior Architect Persona:** Enforces a teaching-first philosophy ("Concepts > Code") where the agent explains the architectural *why* before producing code.
 - 📐 **Organic Driven Development (ODD):** Strict 5-phase engineering lifecycle (Explore ➔ Spec ➔ Tasks ➔ Apply ➔ Verify) preventing hasty, unverified diffs.
 - 🔍 **4R Architectural Review:** Objective audit framework evaluating Risk (security), Readability (maintainability), Reliability (contracts & tests), and Resilience (fault tolerance).
-- 🌳 **Semantic Code Intelligence:** Declarative MCP integration with [Codegraph](https://github.com/anthonyportugal/codegraph) for instant call-graph exploration, caller/callee paths, and blast radius analysis via local SQLite/AST.
+- 🌳 **Semantic Code Intelligence:** Declarative MCP integration with [Codegraph](https://github.com/colbymchenry/codegraph) for instant call-graph exploration, caller/callee paths, and blast radius analysis via local SQLite/AST.
 - 💾 **Persistent Cross-Session Memory:** Engram memory protocol preserving architectural decisions, gotchas, and bug root causes across context compactions and separate sessions.
+- ⚡ **Multi-Runtime CLI Adapters:** Single-command setup (`agent-harness setup`) linking MCP servers and compiled rules across **Antigravity CLI**, **Claude Code CLI**, **OpenAI Codex CLI**, and **OpenCode CLI**.
 - 🎯 **Ambient by Default, Surgical by Activation:** Zero project-level configuration needed. Active projects enable AST graph indexing with a single `codegraph init`.
 - 🛡️ **Fail-Closed Privacy:** Clean separation of concerns. Global instructions and MCP templates remain 100% public-safe; identities, credentials, and signing keys stay strictly isolated in private modules.
 - 🧪 **Automated Local Verification:** Built-in test suite (`tests/smoke.sh`) validating shell syntax (`bash -n`), static analysis (`shellcheck`), directory boundaries, and CLI command contracts.
@@ -40,7 +41,7 @@ Modular, reproducible, and vendor-agnostic development harness for AI coding age
 ```text
 agent-harness/
 ├── bin/
-│   └── agent-harness        # Management CLI (plan, doctor, status, mcp)
+│   └── agent-harness        # Management CLI (plan, doctor, rules, mcp, skills, setup)
 ├── rules/                   # Master agent instructions
 │   ├── persona.md           # Senior Architect & Mentor persona
 │   ├── odd.md               # Organic Driven Development workflow
@@ -50,7 +51,8 @@ agent-harness/
 ├── mcp/                     # Declarative MCP server catalog
 │   ├── codegraph.json       # AST code intelligence on stdio
 │   └── engram.json          # Persistent memory database on stdio
-├── skills/                  # Curated skills registry and installation manifests
+├── skills/                  # Curated ambient skills
+│   └── manifest.json        # Curated skills registry (Context7, Gitmoji, Discovery)
 ├── tests/
 │   └── smoke.sh             # Local automated smoke tests and static analysis
 ├── LICENSE                  # MIT License
@@ -67,30 +69,34 @@ agent-harness/
 | **01** | **Scaffolding & CI** | Clean architecture layout, CLI entrypoint, and automated test suite | ✅ Complete |
 | **02** | **Persona & ODD** | Senior Architect teaching persona, ODD workflow, and commit standards | ✅ Complete |
 | **03** | **Intelligence & Memory** | Codegraph AST MCP catalog, Engram memory protocol, and 4R review framework | ✅ Complete |
-| **04** | **Skills & Adapters** | Declarative skills registry and runtime adapters (Antigravity, Claude, Codex, Gemini) | ⏳ Planned |
+| **04** | **Skills & CLI Adapters** | Curated skills manifest, runtime adapters (Antigravity, Claude, Codex, OpenCode) & setup | ✅ Complete |
 | **05** | **Fleet Orchestration** | Multi-agent concurrency and distributed coordination via `herdr` | ⏳ Future |
 
 ---
 
 ## 🛠️ Management CLI (`bin/agent-harness`)
 
-The repository includes a standalone management CLI to audit and inspect the ambient agent environment:
+The repository includes a standalone management CLI to audit, inspect, and configure agent environments:
 
 ```bash
-# Display the active agent harness configuration and component paths
+# Display active harness architecture and supported agent CLIs
 ./bin/agent-harness plan
 
-# Audit local toolchains and dependencies (git, pnpm, codegraph, engram, shellcheck)
+# Audit local toolchains, CLI agents, and catalog integrity
 ./bin/agent-harness doctor
 
-# Display current repository status and Git metadata
-./bin/agent-harness status
+# Compile modular rules into a single markdown document
+./bin/agent-harness rules assemble
 
-# List available MCP servers in catalog
+# List registered MCP servers in catalog
 ./bin/agent-harness mcp list
 
-# Export merged MCP configuration snippet for agent clients
-./bin/agent-harness mcp config generic
+# List curated skills from manifest
+./bin/agent-harness skills list
+
+# Setup and configure all agent CLIs (dry-run mode available)
+./bin/agent-harness setup --target all --dry-run
+./bin/agent-harness setup --target claude
 ```
 
 ---

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "Curated ambient skills manifest for AI coding agent CLIs",
+  "skills": [
+    {
+      "name": "context7",
+      "description": "Up-to-date documentation resolution and queries via Context7 CLI (ctx7)",
+      "source": "intellectronica/agent-skills",
+      "ref": "9b0e00ad1b941165e2506545bbfddafa34cf2cb8",
+      "path": "skills/context7/SKILL.md",
+      "sha256": "ce0f50962f8efd897f34d83fd372b1435ba1e8be2e0d690dcfce6e8e705d1eb6"
+    },
+    {
+      "name": "find-docs",
+      "description": "Library and framework documentation finder powered by Context7",
+      "source": "upstash/context7",
+      "ref": "63a40c6a6a95ba7b4bf8823e6d817454a84be572",
+      "path": "skills/find-docs/SKILL.md",
+      "sha256": "20ed8991094a37c1bb307b4088316443943b3cb73208face626f3aaf7bcf109d"
+    },
+    {
+      "name": "find-skills",
+      "description": "Official skill discovery and installation tool from Vercel Labs",
+      "source": "vercel-labs/skills",
+      "ref": "435076e78988e1e6ec40d00b0b1d76bdbbc5419a",
+      "path": "skills/find-skills/SKILL.md",
+      "sha256": "818ddd5297d5a969d7d967bedd707abda55354fda46f8798848d41e4a21f8dfc"
+    },
+    {
+      "name": "gitmoji-conventional",
+      "description": "Enforces Gitmoji + Conventional Commits specification",
+      "source": "morzecrew/agent-skills",
+      "ref": "6105b0749125b9ae7eef0c11d5f97a5ffa84438f",
+      "path": "skills/gitmoji-conventional/SKILL.md",
+      "sha256": "a399b44a10aab4c197175152dd4e7666017b78f625097cd898f2fff055560b51"
+    }
+  ]
+}

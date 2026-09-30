@@ -12,7 +12,7 @@
 
 *Leer esto en otros idiomas:* [English](README.md)
 
-Arnés modular, reproducible y agnóstico de proveedor para agentes de desarrollo e IA. Establece una capa ambiental estandarizada para el comportamiento de agentes, inteligencia de código semántica (grafos de conocimiento AST), protocolos de memoria persistente, auditorías de arquitectura 4R y habilidades seleccionadas en cualquier estación de trabajo.
+Arnés modular, reproducible y agnóstico de proveedor para CLIs de agentes de desarrollo e IA. Establece una capa ambiental estandarizada para el comportamiento de agentes, inteligencia de código semántica (grafos de conocimiento AST), protocolos de memoria persistente, auditorías de arquitectura 4R y habilidades seleccionadas en cualquier estación de trabajo.
 
 > [!TIP]
 > 🧩 **Ecosistema Modular de Dotfiles:**  
@@ -27,8 +27,9 @@ Arnés modular, reproducible y agnóstico de proveedor para agentes de desarroll
 - 🧠 **Persona de Arquitecto Sénior:** Impone una filosofía docente ("Conceptos > Código") donde el agente explica el *porqué* arquitectónico antes de generar soluciones.
 - 📐 **Desarrollo Dirigido Orgánico (ODD):** Ciclo de vida estricto de 5 fases (Explorar ➔ Spec ➔ Tareas ➔ Aplicar ➔ Verificar) para evitar modificaciones apresuradas y sin validar.
 - 🔍 **Revisión Arquitectónica 4R:** Marco de auditoría objetivo que evalúa Riesgo (seguridad), Legibilidad (mantenibilidad), Fiabilidad (contratos y pruebas) y Resiliencia (tolerancia a fallos).
-- 🌳 **Inteligencia Semántica de Código:** Integración MCP declarativa con [Codegraph](https://github.com/anthonyportugal/codegraph) para exploración instantánea de grafos de llamadas, dependencias y análisis de impacto mediante AST y SQLite local.
+- 🌳 **Inteligencia Semántica de Código:** Integración MCP declarativa con [Codegraph](https://github.com/colbymchenry/codegraph) para exploración instantánea de grafos de llamadas, dependencias y análisis de impacto mediante AST y SQLite local.
 - 💾 **Memoria Persistente entre Sesiones:** Protocolo de memoria Engram para preservar decisiones de arquitectura, gotchas y causas raíz de errores frente a compactaciones de contexto y sesiones independientes.
+- ⚡ **Adaptadores para Múltiples CLIs:** Comando unificado de setup (`agent-harness setup`) que enlaza servidores MCP y reglas compiladas en **Antigravity CLI**, **Claude Code CLI**, **OpenAI Codex CLI** y **OpenCode CLI**.
 - 🎯 **Ambiental por Defecto, Quirúrgico por Demanda:** Cero configuración en proyectos individuales. Repositorios activos activan la indexación AST con un simple comando: `codegraph init`.
 - 🛡️ **Seguridad por Aislamiento:** Separación estricta de responsabilidades. Las reglas globales y plantillas MCP son 100% públicas y seguras; identidades, credenciales y claves de firma permanecen aisladas en módulos privados.
 - 🧪 **Verificación Local Automatizada:** Suite de pruebas integrada (`tests/smoke.sh`) que valida sintaxis bash (`bash -n`), análisis estático (`shellcheck`), límites de directorios y contratos de la CLI.
@@ -40,7 +41,7 @@ Arnés modular, reproducible y agnóstico de proveedor para agentes de desarroll
 ```text
 agent-harness/
 ├── bin/
-│   └── agent-harness        # CLI de gestión (plan, doctor, status, mcp)
+│   └── agent-harness        # CLI de gestión (plan, doctor, rules, mcp, skills, setup)
 ├── rules/                   # Instrucciones maestras para agentes
 │   ├── persona.md           # Persona docente de Arquitecto Sénior
 │   ├── odd.md               # Flujo Organic Driven Development
@@ -50,7 +51,8 @@ agent-harness/
 ├── mcp/                     # Catálogo declarativo de servidores MCP
 │   ├── codegraph.json       # Inteligencia AST de código en stdio
 │   └── engram.json          # Base de memoria persistente en stdio
-├── skills/                  # Registro de habilidades y manifiestos de instalación
+├── skills/                  # Habilidades ambientales seleccionadas
+│   └── manifest.json        # Manifiesto de skills (Context7, Gitmoji, Discovery)
 ├── tests/
 │   └── smoke.sh             # Suite de pruebas automatizadas y análisis estático
 ├── LICENSE                  # Licencia MIT
@@ -67,30 +69,34 @@ agent-harness/
 | **01** | **Scaffolding y CI** | Estructura base, entrypoint CLI y suite de pruebas automatizadas | ✅ Completado |
 | **02** | **Persona y ODD** | Persona docente de Arquitecto Sénior, flujo ODD y estándares de commit | ✅ Completado |
 | **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph, protocolo de memoria Engram y marco 4R | ✅ Completado |
-| **04** | **Skills y Adaptadores** | Registro declarativo de skills y adaptadores de runtime (Antigravity, Claude, Codex, Gemini) | ⏳ Planificado |
+| **04** | **Skills y Adaptadores CLI** | Manifiesto de skills, adaptadores (Antigravity, Claude, Codex, OpenCode) y setup | ✅ Completado |
 | **05** | **Orquestación de Flotas** | Concurrencia multi-agente y coordinación distribuida mediante `herdr` | ⏳ Futuro |
 
 ---
 
 ## 🛠️ CLI de Gestión (`bin/agent-harness`)
 
-El repositorio incluye una CLI independiente para auditar e inspeccionar el entorno de agentes:
+El repositorio incluye una CLI independiente para auditar, inspeccionar y configurar el entorno de agentes:
 
 ```bash
-# Mostrar la configuración activa del arnés y las rutas de sus componentes
+# Mostrar la configuración activa del arnés y las CLIs soportadas
 ./bin/agent-harness plan
 
-# Auditar dependencias y herramientas locales (git, pnpm, codegraph, engram, shellcheck)
+# Auditar dependencias locales, CLIs instaladas y catálogo
 ./bin/agent-harness doctor
 
-# Mostrar el estado actual del repositorio y metadatos de Git
-./bin/agent-harness status
+# Compilar las reglas modulares en un único documento markdown
+./bin/agent-harness rules assemble
 
 # Listar servidores MCP registrados en el catálogo
 ./bin/agent-harness mcp list
 
-# Exportar configuración MCP consolidada para agentes
-./bin/agent-harness mcp config generic
+# Listar habilidades ambientales seleccionadas
+./bin/agent-harness skills list
+
+# Configurar y enlazar todas las CLIs de agentes (soporta modo dry-run)
+./bin/agent-harness setup --target all --dry-run
+./bin/agent-harness setup --target claude
 ```
 
 ---
