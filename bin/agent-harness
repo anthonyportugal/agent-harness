@@ -31,61 +31,97 @@ Setup Options:
 EOF
 }
 
+setup_colors() {
+  if [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && (( $(tput colors 2>/dev/null || echo 0) >= 8 )); then
+    C_RESET='\033[0m'
+    C_BOLD='\033[1m'
+    C_PINK='\033[38;2;245;194;231m'
+    C_MAUVE='\033[38;2;203;166;247m'
+    C_BLUE='\033[38;2;137;180;250m'
+    C_GREEN='\033[38;2;166;227;161m'
+    C_YELLOW='\033[38;2;249;226;175m'
+    C_RED='\033[38;2;243;139;168m'
+    C_SUBTEXT='\033[38;2;166;173;200m'
+  else
+    C_RESET='' C_BOLD='' C_PINK='' C_MAUVE='' C_BLUE=''
+    C_GREEN='' C_YELLOW='' C_RED='' C_SUBTEXT=''
+  fi
+}
+setup_colors
+
+info() {
+  printf '%b%b[%s]%b %b==>%b %s\n' "$C_MAUVE" "$C_BOLD" "$PROGRAM_NAME" "$C_RESET" "$C_BLUE" "$C_RESET" "$*"
+}
+
+success() {
+  printf '%b%b[%s]%b %b✓%b %b%s%b\n' "$C_MAUVE" "$C_BOLD" "$PROGRAM_NAME" "$C_RESET" "$C_GREEN" "$C_RESET" "$C_BOLD" "$*" "$C_RESET"
+}
+
+warn() {
+  printf '%b%b[%s]%b %b%bwarning:%b %s\n' "$C_MAUVE" "$C_BOLD" "$PROGRAM_NAME" "$C_RESET" "$C_YELLOW" "$C_BOLD" "$C_RESET" "$*" >&2
+}
+
+error() {
+  printf '%b%b[%s]%b %b%berror:%b %s\n' "$C_MAUVE" "$C_BOLD" "$PROGRAM_NAME" "$C_RESET" "$C_RED" "$C_BOLD" "$C_RESET" "$*" >&2
+}
+
 die() {
-  printf 'error: %s\n' "$*" >&2
+  error "$*"
   exit 1
 }
 
 cmd_plan() {
-  printf '==> Agent Harness Architecture Plan\n'
-  printf '  Repository Root: %s\n' "$REPO_ROOT"
-  printf '  Architecture:    Ambient Multi-Agent Harness (ODD + 4R + AST + Memory + Skills)\n\n'
+  info "Agent Harness Architecture Plan"
+  printf '  %bRepository Root:%b %s\n' "$C_BOLD" "$C_RESET" "$REPO_ROOT"
+  printf '  %bArchitecture:%b    %bAmbient Multi-Agent Harness (ODD + 4R + AST + Memory + Skills)%b\n\n' "$C_BOLD" "$C_RESET" "$C_GREEN" "$C_RESET"
 
-  printf '  Components:\n'
-  printf '    • Rules:   %s/rules\n' "$REPO_ROOT"
+  printf '  %bComponents:%b\n' "$C_MAUVE" "$C_RESET"
+  printf '    • %bRules:%b   %s/rules\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
   printf '      - persona.md      (Senior Architect & Mentor identity)\n'
   printf '      - odd.md          (Organic Driven Development lifecycle)\n'
   printf '      - conventions.md  (Gitmoji, pnpm, AUR, Context7 standards)\n'
   printf '      - memory.md       (Engram persistent memory protocol)\n'
   printf '      - review-4r.md    (Risk, Readability, Reliability, Resilience)\n'
-  printf '    • MCP:     %s/mcp\n' "$REPO_ROOT"
+  printf '    • %bMCP:%b     %s/mcp\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
   printf '      - codegraph.json  (AST code intelligence on stdio)\n'
   printf '      - engram.json     (Persistent cross-session memory on stdio)\n'
-  printf '    • Skills:  %s/skills\n' "$REPO_ROOT"
+  printf '    • %bSkills:%b  %s/skills\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
   printf '      - manifest.json   (Curated skills for documentation, gitmoji, and discovery)\n'
-  printf '    • Tests:   %s/tests\n\n' "$REPO_ROOT"
+  printf '    • %bTests:%b   %s/tests\n\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
 
-  printf '  Target Agent CLIs:\n'
-  printf '    • Antigravity CLI (antigravity-cli / agy)  [https://antigravity.google/cli/install.sh]\n'
-  printf '    • Claude Code CLI (claude)               [https://claude.ai/install.sh]\n'
-  printf '    • OpenAI Codex CLI (codex)               [https://chatgpt.com/codex/install.sh]\n'
-  printf '    • OpenCode CLI (opencode)                [https://opencode.ai/v2/install]\n'
+  printf '  %bTarget Agent CLIs:%b\n' "$C_MAUVE" "$C_RESET"
+  printf '    • %bAntigravity CLI%b (antigravity-cli / agy)  %b[https://antigravity.google/cli/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bClaude Code CLI%b (claude)               %b[https://claude.ai/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bOpenAI Codex CLI%b (codex)               %b[https://chatgpt.com/codex/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bOpenCode CLI%b (opencode)                %b[https://opencode.ai/v2/install]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
 }
 
 cmd_doctor() {
   local missing=0
   local tool
 
-  printf '==> Checking core system dependencies...\n'
+  info "Checking core system dependencies..."
   for tool in bash git curl; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
+      printf '  %b[OK]%b %-16s %b%s%b\n' "$C_GREEN" "$C_RESET" "$tool" "$C_SUBTEXT" "$(command -v "$tool")" "$C_RESET"
     else
-      printf '  [FAIL] Missing required tool: %s\n' "$tool" >&2
+      printf '  %b[FAIL]%b Missing required tool: %s\n' "$C_RED" "$C_RESET" "$tool" >&2
       missing=$((missing + 1))
     fi
   done
 
-  printf '\n==> Checking agent & semantic toolchains...\n'
+  printf '\n'
+  info "Checking agent & semantic toolchains..."
   for tool in pnpm codegraph engram skills jq shellcheck; do
     if command -v "$tool" >/dev/null 2>&1; then
-      printf '  [OK] %-16s %s\n' "$tool" "$(command -v "$tool")"
+      printf '  %b[OK]%b %-16s %b%s%b\n' "$C_GREEN" "$C_RESET" "$tool" "$C_SUBTEXT" "$(command -v "$tool")" "$C_RESET"
     else
-      printf '  [INFO] Optional tool not found in PATH: %s\n' "$tool"
+      printf '  %b[INFO]%b Optional tool not found in PATH: %s\n' "$C_BLUE" "$C_RESET" "$tool"
     fi
   done
 
-  printf '\n==> Checking detected Agent CLIs in system...\n'
+  printf '\n'
+  info "Checking detected Agent CLIs in system..."
   local bin_path
   local -A AGENT_INSTALL_URLS=(
     ["antigravity"]="curl -fsSL https://antigravity.google/cli/install.sh | bash"
@@ -115,19 +151,20 @@ cmd_doctor() {
     fi
 
     if [[ -n "$bin_path" ]]; then
-      printf '  [OK] %-16s %s\n' "$tool" "$bin_path"
+      printf '  %b[OK]%b %-16s %b%s%b\n' "$C_GREEN" "$C_RESET" "$tool" "$C_SUBTEXT" "$bin_path" "$C_RESET"
     else
-      printf '  [INFO] %-14s not installed in PATH (Install: %s)\n' "$tool" "${AGENT_INSTALL_URLS[$tool]}"
+      printf '  %b[INFO]%b %-14s not installed in PATH %b(Install: %s)%b\n' "$C_BLUE" "$C_RESET" "$tool" "$C_SUBTEXT" "${AGENT_INSTALL_URLS[$tool]}" "$C_RESET"
     fi
   done
 
-  printf '\n==> Checking repository rules and catalog integrity...\n'
+  printf '\n'
+  info "Checking repository rules and catalog integrity..."
   local file
   for file in rules/persona.md rules/odd.md rules/conventions.md rules/memory.md rules/review-4r.md mcp/codegraph.json mcp/engram.json skills/manifest.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
-      printf '  [OK] %s\n' "$file"
+      printf '  %b[OK]%b %s\n' "$C_GREEN" "$C_RESET" "$file"
     else
-      printf '  [FAIL] Missing required file: %s\n' "$file" >&2
+      printf '  %b[FAIL]%b Missing required file: %s\n' "$C_RED" "$C_RESET" "$file" >&2
       missing=$((missing + 1))
     fi
   done
@@ -136,14 +173,15 @@ cmd_doctor() {
     die "Doctor detected $missing missing dependencies or files."
   fi
 
-  printf '\n==> Doctor check passed successfully.\n'
+  printf '\n'
+  success "Doctor check passed successfully."
 }
 
 cmd_status() {
-  printf '==> Agent Harness Environment Status\n'
-  printf '  Repository: %s\n' "$REPO_ROOT"
-  printf '  Branch:     %s\n' "$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
-  printf '  Git commit: %s\n' "$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")"
+  info "Agent Harness Environment Status"
+  printf '  %bRepository:%b %s\n' "$C_BOLD" "$C_RESET" "$REPO_ROOT"
+  printf '  %bBranch:%b     %b%s%b\n' "$C_BOLD" "$C_RESET" "$C_PINK" "$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")" "$C_RESET"
+  printf '  %bGit commit:%b %b%s%b\n' "$C_BOLD" "$C_RESET" "$C_BLUE" "$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "none")" "$C_RESET"
 }
 
 cmd_rules() {
@@ -180,7 +218,7 @@ EOF
       if [[ -n "$out_file" ]]; then
         mkdir -p "$(dirname "$out_file")"
         printf '%s\n' "$buffer" > "$out_file"
-        printf '==> Assembled master rules written to %s\n' "$out_file"
+        success "Assembled master rules written to $out_file"
       else
         printf '%s\n' "$buffer"
       fi
@@ -197,7 +235,7 @@ cmd_mcp() {
 
   case "$subcmd" in
     list)
-      printf '==> Registered MCP Servers in Harness Catalog:\n'
+      info "Registered MCP Servers in Harness Catalog:"
       local json_file name desc
       for json_file in "$REPO_ROOT"/mcp/*.json; do
         [[ -e "$json_file" ]] || continue
@@ -207,7 +245,7 @@ cmd_mcp() {
         else
           desc="MCP configuration file: $json_file"
         fi
-        printf '  • %-12s %s\n' "$name" "$desc"
+        printf '  • %b%-12s%b %s\n' "$C_PINK" "$name" "$C_RESET" "$desc"
       done
       ;;
     config)
@@ -271,7 +309,7 @@ cmd_skills() {
 
   case "$subcmd" in
     list)
-      printf '==> Curated Ambient Skills Manifest:\n'
+      info "Curated Ambient Skills Manifest:"
       if command -v jq >/dev/null 2>&1; then
         jq -r '.skills[] | "  • " + (.name | rpad(22)) + (.description // "")' "$manifest" 2>/dev/null || \
           jq -r '.skills[] | "  • " + .name + ": " + .description' "$manifest"
@@ -280,34 +318,35 @@ cmd_skills() {
       fi
       ;;
     doctor)
-      printf '==> Verifying curated skills in ~/.agents/skills...\n'
       local skills_dir="${HOME}/.agents/skills"
+      info "Verifying curated skills in $skills_dir..."
       if [[ ! -d "$skills_dir" ]]; then
-        printf '  [INFO] ~/.agents/skills directory does not exist yet.\n'
+        info "$skills_dir directory does not exist yet."
         return 0
       fi
       if command -v jq >/dev/null 2>&1; then
         local skill_name
         while read -r skill_name; do
           if [[ -d "$skills_dir/$skill_name" ]]; then
-            printf '  [OK] Skill installed: %s\n' "$skill_name"
+            printf '  %b[OK]%b Skill installed: %s\n' "$C_GREEN" "$C_RESET" "$skill_name"
           else
-            printf '  [INFO] Skill not installed in ~/.agents/skills: %s\n' "$skill_name"
+            printf '  %b[INFO]%b Skill not installed in ~/.agents/skills: %s\n' "$C_BLUE" "$C_RESET" "$skill_name"
           fi
         done < <(jq -r '.skills[].name' "$manifest")
       fi
       ;;
     sync)
-      printf '==> Syncing curated skills to ~/.agents/skills...\n'
+      info "Syncing curated skills to ~/.agents/skills..."
       local skills_dir="${HOME}/.agents/skills"
       mkdir -p "$skills_dir"
       if command -v pnpm >/dev/null 2>&1; then
         local skill_src skill_name
         while IFS='|' read -r skill_name skill_src; do
-          printf '  Syncing skill: %s (%s)...\n' "$skill_name" "$skill_src"
+          printf '  Syncing skill: %b%s%b (%s)...\n' "$C_PINK" "$skill_name" "$C_RESET" "$skill_src"
           pnpm dlx skills-cli add "$skill_src" --skill "$skill_name" --yes || \
-            printf '  [WARN] Failed to sync %s automatically. Run manually.\n' "$skill_name"
+            warn "Failed to sync $skill_name automatically. Run manually."
         done < <(jq -r '.skills[] | .name + "|" + .source' "$manifest")
+        success "Skills synchronized to ~/.agents/skills"
       else
         die "pnpm is required to execute skills-cli via pnpm dlx."
       fi
@@ -351,25 +390,25 @@ cmd_setup() {
     esac
   done
 
-  printf '==> Agent Harness Setup Initiated\n'
-  printf '  Target:  %s\n' "$target"
-  printf '  Deps:    %s\n' "$(( install_deps ? 1 : 0 ))"
-  printf '  Dry Run: %s\n\n' "$(( dry_run ? 1 : 0 ))"
+  info "Agent Harness Setup Initiated"
+  printf '  %bTarget:%b   %s\n' "$C_BOLD" "$C_RESET" "$target"
+  printf '  %bDeps:%b     %s\n' "$C_BOLD" "$C_RESET" "$(( install_deps ? 1 : 0 ))"
+  printf '  %bDry Run:%b  %s\n\n' "$C_BOLD" "$C_RESET" "$(( dry_run ? 1 : 0 ))"
 
   if (( install_deps )); then
-    printf '==> Ensuring CLI dependencies via pnpm...\n'
+    info "Ensuring CLI dependencies via pnpm..."
     if command -v pnpm >/dev/null 2>&1; then
       if (( dry_run )); then
         printf '  [DRY-RUN] Would install @colbymchenry/codegraph and skills-cli globally\n'
       else
-        pnpm add -g @colbymchenry/codegraph skills-cli || printf '  [WARN] pnpm global install failed; check permissions\n'
+        pnpm add -g @colbymchenry/codegraph skills-cli || warn "pnpm global install failed; check permissions"
       fi
     else
-      printf '  [WARN] pnpm not found; please install pnpm first\n'
+      warn "pnpm not found; please install pnpm first"
     fi
 
     if ! command -v engram >/dev/null 2>&1; then
-      printf '==> engram not found in PATH; installing engram from official GitHub releases...\n'
+      info "engram not found in PATH; installing engram from official GitHub releases..."
       local engram_url="https://github.com/Gentleman-Programming/engram/releases/download/v2.2.1/engram_2.2.1_linux_amd64.tar.gz"
       local install_bin_dir="${HOME}/.local/bin"
       if (( dry_run )); then
@@ -380,9 +419,9 @@ cmd_setup() {
         tmp_eg=$(mktemp -d)
         if curl -sSL "$engram_url" | tar -xz -C "$tmp_eg" 2>/dev/null && [[ -f "$tmp_eg/engram" ]]; then
           install -m 0755 "$tmp_eg/engram" "$install_bin_dir/engram"
-          printf '  [OK] Installed engram 2.2.1 to %s/engram\n' "$install_bin_dir"
+          success "Installed engram 2.2.1 to $install_bin_dir/engram"
         else
-          printf '  [WARN] Failed to download or extract engram release from GitHub\n'
+          warn "Failed to download or extract engram release from GitHub"
         fi
         rm -rf "$tmp_eg"
       fi
@@ -413,7 +452,7 @@ cmd_setup() {
 
   local current_target
   for current_target in "${targets_to_run[@]}"; do
-    printf '==> Configuring Agent Runtime: %s...\n' "$current_target"
+    info "Configuring Agent Runtime: $current_target..."
     case "$current_target" in
       antigravity-cli)
         local agy_cfg="${HOME}/.gemini/antigravity-cli/mcp_config.json"
@@ -433,13 +472,13 @@ cmd_setup() {
                '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
                 .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
                "$agy_cfg" > "$tmp_agy" && mv "$tmp_agy" "$agy_cfg"
-            printf '  [OK] Merged MCP servers into %s\n' "$agy_cfg"
+            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$agy_cfg"
           else
             cmd_mcp config antigravity-cli > "$agy_cfg"
-            printf '  [OK] Created %s\n' "$agy_cfg"
+            printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$agy_cfg"
           fi
           cmd_rules assemble "$agy_rules" >/dev/null
-          printf '  [OK] Installed rules in %s\n' "$agy_rules"
+          printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$agy_rules"
           cat > "$agy_skills_json" <<'EOF'
 {
   "entries": [
@@ -452,7 +491,7 @@ EOF
           ln -sfn "$agy_skills_json" "${HOME}/.gemini/antigravity-cli/skills.json"
           ln -sfn "${HOME}/.agents/skills" "${HOME}/.gemini/config/skills"
           ln -sfn "${HOME}/.agents/skills" "${HOME}/.gemini/antigravity-cli/skills"
-          printf '  [OK] Configured skills discovery in %s\n' "$agy_skills_json"
+          printf '  %b[OK]%b Configured skills discovery in %s\n' "$C_GREEN" "$C_RESET" "$agy_skills_json"
         fi
         ;;
       claude)
@@ -471,13 +510,13 @@ EOF
                '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
                 .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
                "$claude_cfg" > "$tmp_claude" && mv "$tmp_claude" "$claude_cfg"
-            printf '  [OK] Merged MCP servers into %s\n' "$claude_cfg"
+            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$claude_cfg"
           else
             cmd_mcp config claude > "$claude_cfg"
-            printf '  [OK] Created %s\n' "$claude_cfg"
+            printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$claude_cfg"
           fi
           cmd_rules assemble "$claude_rules" >/dev/null
-          printf '  [OK] Installed rules in %s\n' "$claude_rules"
+          printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$claude_rules"
         fi
         ;;
       codex)
@@ -496,13 +535,13 @@ EOF
                '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
                 .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
                "$codex_cfg" > "$tmp_codex" && mv "$tmp_codex" "$codex_cfg"
-            printf '  [OK] Merged MCP servers into %s\n' "$codex_cfg"
+            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$codex_cfg"
           else
             cmd_mcp config codex > "$codex_cfg"
-            printf '  [OK] Created %s\n' "$codex_cfg"
+            printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$codex_cfg"
           fi
           cmd_rules assemble "$codex_rules" >/dev/null
-          printf '  [OK] Installed rules in %s\n' "$codex_rules"
+          printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$codex_rules"
         fi
         ;;
       opencode)
@@ -521,19 +560,20 @@ EOF
                '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
                 .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
                "$opencode_cfg" > "$tmp_opencode" && mv "$tmp_opencode" "$opencode_cfg"
-            printf '  [OK] Merged MCP servers into %s\n' "$opencode_cfg"
+            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$opencode_cfg"
           else
             cmd_mcp config opencode > "$opencode_cfg"
-            printf '  [OK] Created %s\n' "$opencode_cfg"
+            printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$opencode_cfg"
           fi
           cmd_rules assemble "$opencode_rules" >/dev/null
-          printf '  [OK] Installed rules in %s\n' "$opencode_rules"
+          printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$opencode_rules"
         fi
         ;;
     esac
   done
 
-  printf '\n==> Setup completed successfully.\n'
+  printf '\n'
+  success "Setup completed successfully."
 }
 
 case "$COMMAND" in
@@ -562,7 +602,7 @@ case "$COMMAND" in
     usage
     ;;
   *)
-    printf 'error: unknown command "%s"\n\n' "$COMMAND" >&2
+    error "unknown command '$COMMAND'"
     usage >&2
     exit 2
     ;;

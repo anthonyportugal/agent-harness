@@ -26,8 +26,11 @@ done
 
 [[ -f "$REPO_ROOT/README.md" ]] || fail "Missing README.md"
 [[ -f "$REPO_ROOT/README.es.md" ]] || fail "Missing README.es.md"
+[[ -f "$REPO_ROOT/AGENTS.md" ]] || fail "Missing AGENTS.md"
 [[ -f "$REPO_ROOT/LICENSE" ]] || fail "Missing LICENSE"
 [[ -f "$REPO_ROOT/.gitignore" ]] || fail "Missing .gitignore"
+[[ -f "$REPO_ROOT/.github/workflows/ci.yml" ]] || fail "Missing .github/workflows/ci.yml"
+[[ -x "$REPO_ROOT/.githooks/pre-commit" ]] || fail "Missing or non-executable .githooks/pre-commit"
 [[ -x "$HARNESS_CLI" ]] || fail "CLI $HARNESS_CLI is not executable"
 
 # Rules checks
@@ -52,12 +55,12 @@ fi
 
 # 4. Validate bash syntax (bash -n)
 printf '  Validating bash syntax...\n'
-bash -n "$HARNESS_CLI" "$SCRIPT_DIR/smoke.sh" || fail "Syntax validation failed"
+bash -n "$HARNESS_CLI" "$SCRIPT_DIR/smoke.sh" "$REPO_ROOT/.githooks/pre-commit" || fail "Syntax validation failed"
 
 # 5. ShellCheck linting if available
 if command -v shellcheck >/dev/null 2>&1; then
   printf '  Running shellcheck...\n'
-  shellcheck "$HARNESS_CLI" "$SCRIPT_DIR/smoke.sh" || fail "ShellCheck detected issues"
+  shellcheck -x "$HARNESS_CLI" "$SCRIPT_DIR/smoke.sh" "$REPO_ROOT/.githooks/pre-commit" || fail "ShellCheck detected issues"
 else
   printf '  [SKIP] ShellCheck not installed, skipping static analysis\n'
 fi
