@@ -340,6 +340,26 @@ cmd_setup() {
     else
       printf '  [WARN] pnpm not found; please install pnpm first\n'
     fi
+
+    if ! command -v engram >/dev/null 2>&1; then
+      printf '==> engram not found in PATH; installing engram from official GitHub releases...\n'
+      local engram_url="https://github.com/Gentleman-Programming/engram/releases/download/v2.2.1/engram_2.2.1_linux_amd64.tar.gz"
+      local install_bin_dir="${HOME}/.local/bin"
+      if (( dry_run )); then
+        printf '  [DRY-RUN] Would download and install engram 2.2.1 to %s/engram\n' "$install_bin_dir"
+      else
+        mkdir -p "$install_bin_dir"
+        local tmp_eg
+        tmp_eg=$(mktemp -d)
+        if curl -sSL "$engram_url" | tar -xz -C "$tmp_eg" 2>/dev/null && [[ -f "$tmp_eg/engram" ]]; then
+          install -m 0755 "$tmp_eg/engram" "$install_bin_dir/engram"
+          printf '  [OK] Installed engram 2.2.1 to %s/engram\n' "$install_bin_dir"
+        else
+          printf '  [WARN] Failed to download or extract engram release from GitHub\n'
+        fi
+        rm -rf "$tmp_eg"
+      fi
+    fi
   fi
 
   local targets_to_run=()

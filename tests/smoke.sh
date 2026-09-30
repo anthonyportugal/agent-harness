@@ -94,8 +94,10 @@ echo "$mcp_cfg" | grep -q 'engram' || fail "CLI mcp config is missing engram"
 
 printf '  Verifying CLI skills commands...\n'
 skills_list=$("$HARNESS_CLI" skills list)
-echo "$skills_list" | grep -q 'context7' || fail "CLI skills list is missing context7"
+echo "$skills_list" | grep -q 'find-docs' || fail "CLI skills list is missing find-docs"
 echo "$skills_list" | grep -q 'find-skills' || fail "CLI skills list is missing find-skills"
+echo "$skills_list" | grep -q 'cognitive-doc-design' || fail "CLI skills list is missing cognitive-doc-design"
+echo "$skills_list" | grep -q 'skill-creator' || fail "CLI skills list is missing skill-creator"
 
 printf '  Verifying CLI setup dry-run command...\n'
 setup_output=$("$HARNESS_CLI" setup --dry-run --target all)

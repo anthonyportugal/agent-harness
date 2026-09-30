@@ -1,16 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Curated ambient skills manifest for AI coding agent CLIs",
   "skills": [
-    {
-      "name": "context7",
-      "description": "Up-to-date documentation resolution and queries via Context7 CLI (ctx7)",
-      "source": "intellectronica/agent-skills",
-      "ref": "9b0e00ad1b941165e2506545bbfddafa34cf2cb8",
-      "path": "skills/context7/SKILL.md",
-      "sha256": "ce0f50962f8efd897f34d83fd372b1435ba1e8be2e0d690dcfce6e8e705d1eb6"
-    },
     {
       "name": "find-docs",
       "description": "Library and framework documentation finder powered by Context7",
@@ -34,6 +26,18 @@
       "ref": "6105b0749125b9ae7eef0c11d5f97a5ffa84438f",
       "path": "skills/gitmoji-conventional/SKILL.md",
       "sha256": "a399b44a10aab4c197175152dd4e7666017b78f625097cd898f2fff055560b51"
+    },
+    {
+      "name": "cognitive-doc-design",
+      "description": "Design documentation that reduces cognitive load and accelerates review",
+      "source": "local/agent-harness",
+      "path": "skills/cognitive-doc-design/SKILL.md"
+    },
+    {
+      "name": "skill-creator",
+      "description": "Author new LLM-first skills adhering to the open SKILL.md specification",
+      "source": "local/agent-harness",
+      "path": "skills/skill-creator/SKILL.md"
     }
   ]
 }
