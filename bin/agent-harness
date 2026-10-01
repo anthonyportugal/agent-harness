@@ -73,27 +73,30 @@ die() {
 cmd_plan() {
   info "Agent Harness Architecture Plan"
   printf '  %bRepository Root:%b %s\n' "$C_BOLD" "$C_RESET" "$REPO_ROOT"
-  printf '  %bArchitecture:%b    %bAmbient Multi-Agent Harness (ODD + 4R + AST + Memory + Skills)%b\n\n' "$C_BOLD" "$C_RESET" "$C_GREEN" "$C_RESET"
+  printf '  %bArchitecture:%b    %bAmbient Multi-Agent Harness (ODD + 4R + AST + Memory + Tiers)%b\n\n' "$C_BOLD" "$C_RESET" "$C_GREEN" "$C_RESET"
 
   printf '  %bComponents:%b\n' "$C_MAUVE" "$C_RESET"
   printf '    • %bRules:%b   %s/rules\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
-  printf '      - persona.md      (Senior Architect & Mentor identity)\n'
-  printf '      - odd.md          (Organic Driven Development lifecycle)\n'
-  printf '      - conventions.md  (Gitmoji, pnpm, AUR, Context7 standards)\n'
-  printf '      - memory.md       (Engram persistent memory protocol)\n'
-  printf '      - review-4r.md    (Risk, Readability, Reliability, Resilience)\n'
+  printf '      - persona.md        (Senior Architect & Mentor identity)\n'
+  printf '      - odd.md            (Adaptive Organic Driven Development lifecycle)\n'
+  printf '      - orchestration.md  (Cognitive tiers & multi-agent delegation)\n'
+  printf '      - conventions.md    (Gitmoji, pnpm, AUR, Context7 standards)\n'
+  printf '      - memory.md         (Engram persistent memory protocol)\n'
+  printf '      - review-4r.md      (Risk, Readability, Reliability, Resilience)\n'
+  printf '    • %bConfig:%b  %s/config\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
+  printf '      - models.env.example (Decoupled tier mappings for frontier models)\n'
   printf '    • %bMCP:%b     %s/mcp\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
-  printf '      - codegraph.json  (AST code intelligence on stdio)\n'
-  printf '      - engram.json     (Persistent cross-session memory on stdio)\n'
+  printf '      - codegraph.json    (AST code intelligence on stdio)\n'
+  printf '      - engram.json       (Persistent cross-session memory on stdio)\n'
   printf '    • %bSkills:%b  %s/skills\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
-  printf '      - manifest.json   (Curated skills for documentation, gitmoji, and discovery)\n'
+  printf '      - manifest.json     (Curated skills for documentation, gitmoji, and discovery)\n'
   printf '    • %bTests:%b   %s/tests\n\n' "$C_PINK" "$C_RESET" "$REPO_ROOT"
 
   printf '  %bTarget Agent CLIs:%b\n' "$C_MAUVE" "$C_RESET"
   printf '    • %bAntigravity CLI%b (antigravity-cli / agy)  %b[https://antigravity.google/cli/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
-  printf '    • %bClaude Code CLI%b (claude)               %b[https://claude.ai/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
-  printf '    • %bOpenAI Codex CLI%b (codex)               %b[https://chatgpt.com/codex/install.sh]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
-  printf '    • %bOpenCode CLI%b (opencode)                %b[https://opencode.ai/v2/install]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bClaude Code CLI%b (claude)               %b[~/.claude/settings.json + CLAUDE.md]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bOpenAI Codex CLI%b (codex)               %b[~/.codex/config.toml + AGENTS.md]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
+  printf '    • %bOpenCode CLI%b (opencode)                %b[~/.config/opencode/opencode.json]%b\n' "$C_BLUE" "$C_RESET" "$C_SUBTEXT" "$C_RESET"
 }
 
 cmd_doctor() {
@@ -160,7 +163,7 @@ cmd_doctor() {
   printf '\n'
   info "Checking repository rules and catalog integrity..."
   local file
-  for file in rules/persona.md rules/odd.md rules/conventions.md rules/memory.md rules/review-4r.md mcp/codegraph.json mcp/engram.json skills/manifest.json; do
+  for file in rules/persona.md rules/odd.md rules/orchestration.md rules/conventions.md rules/memory.md rules/review-4r.md config/models.env.example mcp/codegraph.json mcp/engram.json skills/manifest.json; do
     if [[ -f "$REPO_ROOT/$file" ]]; then
       printf '  %b[OK]%b %s\n' "$C_GREEN" "$C_RESET" "$file"
     else
@@ -201,6 +204,10 @@ $(cat "$REPO_ROOT/rules/persona.md")
 ---
 
 $(cat "$REPO_ROOT/rules/odd.md")
+
+---
+
+$(cat "$REPO_ROOT/rules/orchestration.md")
 
 ---
 
@@ -251,7 +258,62 @@ cmd_mcp() {
     config)
       local target=${1:-generic}
       case "$target" in
-        generic|claude|antigravity-cli|antigravity|codex|opencode)
+        codex)
+          cat <<'EOF'
+# Codex CLI Global MCP Configuration (TOML)
+[features]
+multi_agent_v2 = true
+
+[mcp_servers.codegraph]
+command = "codegraph"
+args = ["serve", "--mcp"]
+
+[mcp_servers.engram]
+command = "engram"
+args = ["mcp", "--tools=agent"]
+EOF
+          ;;
+        opencode)
+          if command -v jq >/dev/null 2>&1; then
+            jq -n \
+              --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
+              --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
+              '{
+                "$schema": "https://opencode.ai/config.json",
+                mcp: {
+                  servers: {
+                    codegraph: {
+                      type: "local",
+                      command: ([$cg[0].command] + $cg[0].args)
+                    },
+                    engram: {
+                      type: "local",
+                      command: ([$eg[0].command] + $eg[0].args)
+                    }
+                  }
+                }
+              }'
+          else
+            cat <<'JSON'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "codegraph": {
+        "type": "local",
+        "command": ["codegraph", "serve", "--mcp"]
+      },
+      "engram": {
+        "type": "local",
+        "command": ["engram", "mcp", "--tools=agent"]
+      }
+    }
+  }
+}
+JSON
+          fi
+          ;;
+        generic|claude|antigravity-cli|antigravity)
           if command -v jq >/dev/null 2>&1; then
             jq -n \
               --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
@@ -450,6 +512,18 @@ cmd_setup() {
       ;;
   esac
 
+  # Ensure user-level cognitive tiers configuration exists
+  local user_models_env="${HOME}/.config/agent-harness/models.env"
+  if [[ ! -f "$user_models_env" ]]; then
+    if (( dry_run )); then
+      printf '  [DRY-RUN] Would seed cognitive tiers template in %s\n' "$user_models_env"
+    else
+      mkdir -p "$(dirname "$user_models_env")"
+      cp "$REPO_ROOT/config/models.env.example" "$user_models_env"
+      printf '  %b[OK]%b Seeded cognitive tiers in %s\n' "$C_GREEN" "$C_RESET" "$user_models_env"
+    fi
+  fi
+
   local current_target
   for current_target in "${targets_to_run[@]}"; do
     info "Configuring Agent Runtime: $current_target..."
@@ -495,13 +569,21 @@ EOF
         fi
         ;;
       claude)
-        local claude_cfg="${HOME}/.claude.json"
+        local claude_cfg="${HOME}/.claude/settings.json"
         local claude_rules="${HOME}/.claude/CLAUDE.md"
+        local claude_agent_sentinel="${HOME}/.claude/agents/sentinel.md"
         if (( dry_run )); then
           printf '  [DRY-RUN] Would update MCP servers in %s\n' "$claude_cfg"
           printf '  [DRY-RUN] Would compile master rules to %s\n' "$claude_rules"
+          printf '  [DRY-RUN] Would install sentinel subagent in %s\n' "$claude_agent_sentinel"
         else
-          mkdir -p "$(dirname "$claude_rules")"
+          mkdir -p "$(dirname "$claude_cfg")" "$(dirname "$claude_agent_sentinel")"
+          if [[ -f "${HOME}/.claude.json" && ! -f "$claude_cfg" ]]; then
+            mv "${HOME}/.claude.json" "$claude_cfg"
+          elif [[ -f "${HOME}/.claude.json" ]]; then
+            rm -f "${HOME}/.claude.json"
+          fi
+
           if [[ -f "$claude_cfg" ]] && command -v jq >/dev/null 2>&1; then
             local tmp_claude
             tmp_claude=$(mktemp)
@@ -517,25 +599,50 @@ EOF
           fi
           cmd_rules assemble "$claude_rules" >/dev/null
           printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$claude_rules"
+
+          cat > "$claude_agent_sentinel" <<'EOF'
+---
+name: sentinel
+description: 4R Architectural Review Auditor (Risk, Readability, Reliability, Resilience)
+tools: [bash, view_file, grep]
+---
+You are Sentinel, an independent 4R architectural auditor.
+Your sole responsibility is to evaluate working tree diffs and code changes against the 4R protocol:
+- R1: Risk (Secrets, credential leaks, permission escalation)
+- R2: Readability (Cognitive complexity, clean design)
+- R3: Reliability (Behavior-first tests, edge-cases)
+- R4: Resilience (Fault tolerance, safe rollbacks)
+You operate in read-only mode. Never modify files directly. Report findings structured by severity (BLOCKER, CRITICAL, WARNING, SUGGESTION).
+EOF
+          printf '  %b[OK]%b Installed sentinel subagent in %s\n' "$C_GREEN" "$C_RESET" "$claude_agent_sentinel"
         fi
         ;;
       codex)
-        local codex_cfg="${HOME}/.codex/config.json"
+        local codex_cfg="${HOME}/.codex/config.toml"
         local codex_rules="${HOME}/.codex/AGENTS.md"
         if (( dry_run )); then
-          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$codex_cfg"
-          printf '  [DRY-RUN] Would verify or update rules in %s\n' "$codex_rules"
+          printf '  [DRY-RUN] Would update MCP servers and features in %s\n' "$codex_cfg"
+          printf '  [DRY-RUN] Would compile rules to %s\n' "$codex_rules"
         else
           mkdir -p "$(dirname "$codex_cfg")"
-          if [[ -f "$codex_cfg" ]] && command -v jq >/dev/null 2>&1; then
-            local tmp_codex
-            tmp_codex=$(mktemp)
-            jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
-               --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
-               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
-                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
-               "$codex_cfg" > "$tmp_codex" && mv "$tmp_codex" "$codex_cfg"
-            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$codex_cfg"
+          rm -f "${HOME}/.codex/config.json"
+          if [[ -f "$codex_cfg" ]]; then
+            if ! grep -q '\[mcp_servers\.codegraph\]' "$codex_cfg"; then
+              cat >> "$codex_cfg" <<'EOF'
+
+[features]
+multi_agent_v2 = true
+
+[mcp_servers.codegraph]
+command = "codegraph"
+args = ["serve", "--mcp"]
+
+[mcp_servers.engram]
+command = "engram"
+args = ["mcp", "--tools=agent"]
+EOF
+            fi
+            printf '  %b[OK]%b Verified MCP and multi_agent_v2 in %s\n' "$C_GREEN" "$C_RESET" "$codex_cfg"
           else
             cmd_mcp config codex > "$codex_cfg"
             printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$codex_cfg"
@@ -548,7 +655,7 @@ EOF
         local opencode_cfg="${HOME}/.config/opencode/opencode.json"
         local opencode_rules="${HOME}/.config/opencode/AGENTS.md"
         if (( dry_run )); then
-          printf '  [DRY-RUN] Would update MCP servers in %s\n' "$opencode_cfg"
+          printf '  [DRY-RUN] Would update MCP servers, small_model, and agents in %s\n' "$opencode_cfg"
           printf '  [DRY-RUN] Would compile rules to %s\n' "$opencode_rules"
         else
           mkdir -p "$(dirname "$opencode_cfg")"
@@ -557,12 +664,34 @@ EOF
             tmp_opencode=$(mktemp)
             jq --slurpfile cg "$REPO_ROOT/mcp/codegraph.json" \
                --slurpfile eg "$REPO_ROOT/mcp/engram.json" \
-               '.mcpServers.codegraph = {type: $cg[0].transport, command: $cg[0].command, args: $cg[0].args} |
-                .mcpServers.engram = {type: $eg[0].transport, command: $eg[0].command, args: $eg[0].args}' \
-               "$opencode_cfg" > "$tmp_opencode" && mv "$tmp_opencode" "$opencode_cfg"
-            printf '  %b[OK]%b Merged MCP servers into %s\n' "$C_GREEN" "$C_RESET" "$opencode_cfg"
+               '
+                ."$schema" = "https://opencode.ai/config.json" |
+                .mcp.servers.codegraph = {type: "local", command: ([$cg[0].command] + $cg[0].args)} |
+                .mcp.servers.engram = {type: "local", command: ([$eg[0].command] + $eg[0].args)} |
+                .small_model = (.small_model // "google/gemini-3.8-flash-low") |
+                .agent.sentinel = {
+                  mode: "subagent",
+                  model: (.agent.sentinel.model // "google/gemini-3.8-flash-low"),
+                  description: "4R Architectural Review Auditor",
+                  permission: {edit: "deny", bash: "allow"}
+                }
+               ' "$opencode_cfg" > "$tmp_opencode" && mv "$tmp_opencode" "$opencode_cfg"
+            printf '  %b[OK]%b Merged MCP, small_model, and subagent into %s\n' "$C_GREEN" "$C_RESET" "$opencode_cfg"
           else
             cmd_mcp config opencode > "$opencode_cfg"
+            if command -v jq >/dev/null 2>&1; then
+              local tmp_opencode
+              tmp_opencode=$(mktemp)
+              jq '
+                .small_model = "google/gemini-3.8-flash-low" |
+                .agent.sentinel = {
+                  mode: "subagent",
+                  model: "google/gemini-3.8-flash-low",
+                  description: "4R Architectural Review Auditor",
+                  permission: {edit: "deny", bash: "allow"}
+                }
+              ' "$opencode_cfg" > "$tmp_opencode" && mv "$tmp_opencode" "$opencode_cfg"
+            fi
             printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$opencode_cfg"
           fi
           cmd_rules assemble "$opencode_rules" >/dev/null

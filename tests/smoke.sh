@@ -36,9 +36,11 @@ done
 # Rules checks
 [[ -f "$REPO_ROOT/rules/persona.md" ]] || fail "Missing rules/persona.md"
 [[ -f "$REPO_ROOT/rules/odd.md" ]] || fail "Missing rules/odd.md"
+[[ -f "$REPO_ROOT/rules/orchestration.md" ]] || fail "Missing rules/orchestration.md"
 [[ -f "$REPO_ROOT/rules/conventions.md" ]] || fail "Missing rules/conventions.md"
 [[ -f "$REPO_ROOT/rules/memory.md" ]] || fail "Missing rules/memory.md"
 [[ -f "$REPO_ROOT/rules/review-4r.md" ]] || fail "Missing rules/review-4r.md"
+[[ -f "$REPO_ROOT/config/models.env.example" ]] || fail "Missing config/models.env.example"
 
 # MCP Catalog & Skills checks
 [[ -f "$REPO_ROOT/mcp/codegraph.json" ]] || fail "Missing mcp/codegraph.json"
@@ -84,6 +86,7 @@ printf '  Verifying CLI rules assemble command...\n'
 rules_output=$("$HARNESS_CLI" rules assemble)
 echo "$rules_output" | grep -q 'Persona: Senior Architect & Mentor' || fail "CLI rules assemble is missing persona"
 echo "$rules_output" | grep -q 'Organic Driven Development' || fail "CLI rules assemble is missing ODD"
+echo "$rules_output" | grep -q 'Multi-Agent Orchestration' || fail "CLI rules assemble is missing orchestration"
 echo "$rules_output" | grep -q '4R Architectural Review Protocol' || fail "CLI rules assemble is missing 4R"
 
 printf '  Verifying CLI mcp commands...\n'
@@ -95,6 +98,12 @@ mcp_cfg=$("$HARNESS_CLI" mcp config generic)
 echo "$mcp_cfg" | grep -q 'codegraph' || fail "CLI mcp config is missing codegraph"
 echo "$mcp_cfg" | grep -q 'engram' || fail "CLI mcp config is missing engram"
 
+mcp_codex=$("$HARNESS_CLI" mcp config codex)
+echo "$mcp_codex" | grep -q 'multi_agent_v2' || fail "CLI mcp config codex missing multi_agent_v2"
+
+mcp_opencode=$("$HARNESS_CLI" mcp config opencode)
+echo "$mcp_opencode" | grep -q 'opencode.ai/config.json' || fail "CLI mcp config opencode missing v2 schema"
+
 printf '  Verifying CLI skills commands...\n'
 skills_list=$("$HARNESS_CLI" skills list)
 echo "$skills_list" | grep -q 'find-docs' || fail "CLI skills list is missing find-docs"
@@ -105,9 +114,9 @@ echo "$skills_list" | grep -q 'skill-creator' || fail "CLI skills list is missin
 printf '  Verifying CLI setup dry-run command...\n'
 setup_output=$("$HARNESS_CLI" setup --dry-run --target all)
 echo "$setup_output" | grep -q 'antigravity-cli' || fail "CLI setup is missing antigravity-cli target"
-echo "$setup_output" | grep -q 'claude' || fail "CLI setup is missing claude target"
-echo "$setup_output" | grep -q 'codex' || fail "CLI setup is missing codex target"
-echo "$setup_output" | grep -q 'opencode' || fail "CLI setup is missing opencode target"
+echo "$setup_output" | grep -q 'settings.json' || fail "CLI setup is missing claude settings.json target"
+echo "$setup_output" | grep -q 'config.toml' || fail "CLI setup is missing codex config.toml target"
+echo "$setup_output" | grep -q 'opencode.json' || fail "CLI setup is missing opencode.json target"
 
 # 7. Verify .gitignore protection
 printf '  Checking .gitignore guards...\n'

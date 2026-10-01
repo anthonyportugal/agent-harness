@@ -42,9 +42,12 @@ Arnés modular, reproducible y agnóstico de proveedor para CLIs de agentes de d
 agent-harness/
 ├── bin/
 │   └── agent-harness        # CLI de gestión (plan, doctor, rules, mcp, skills, setup)
+├── config/                  # Plantillas de configuración de tiers cognitivos
+│   └── models.env.example   # Mapeo desacoplado de tiers para modelos de frontera
 ├── rules/                   # Instrucciones maestras para agentes
 │   ├── persona.md           # Persona docente de Arquitecto Sénior
-│   ├── odd.md               # Flujo Organic Driven Development
+│   ├── odd.md               # Flujo adaptativo de Organic Driven Development
+│   ├── orchestration.md     # Delegación multi-agente y tiers cognitivos
 │   ├── conventions.md       # Convenciones técnicas y de herramientas
 │   ├── memory.md            # Protocolo de memoria persistente (Engram)
 │   └── review-4r.md         # Marco de revisión arquitectónica 4R
@@ -70,7 +73,7 @@ agent-harness/
 | **02** | **Persona y ODD** | Persona docente de Arquitecto Sénior, flujo ODD y estándares de commit | ✅ Completado |
 | **03** | **Inteligencia y Memoria** | Catálogo MCP de Codegraph, protocolo de memoria Engram y marco 4R | ✅ Completado |
 | **04** | **Skills y Adaptadores CLI** | Manifiesto de skills, adaptadores (Antigravity, Claude, Codex, OpenCode) y setup | ✅ Completado |
-| **05** | **Orquestación de Flotas** | Concurrencia multi-agente y coordinación distribuida mediante `herdr` | ⏳ Futuro |
+| **05** | **Orquestación Multi-Agente** | Tiers cognitivos (Thinker, Worker, Sentinel), ODD adaptativo y delegación cross-runtime | ✅ Completado |
 
 ---
 

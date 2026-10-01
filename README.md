@@ -42,9 +42,12 @@ Modular, reproducible, and vendor-agnostic development harness for AI coding age
 agent-harness/
 ├── bin/
 │   └── agent-harness        # Management CLI (plan, doctor, rules, mcp, skills, setup)
+├── config/                  # Cognitive tier model templates
+│   └── models.env.example   # Decoupled tier mappings for frontier models
 ├── rules/                   # Master agent instructions
 │   ├── persona.md           # Senior Architect & Mentor persona
-│   ├── odd.md               # Organic Driven Development workflow
+│   ├── odd.md               # Adaptive Organic Driven Development workflow
+│   ├── orchestration.md     # Multi-agent delegation & cognitive tiers
 │   ├── conventions.md       # Engineering conventions & toolchain standards
 │   ├── memory.md            # Persistent memory protocol (Engram)
 │   └── review-4r.md         # 4R Architectural Review framework
@@ -70,7 +73,7 @@ agent-harness/
 | **02** | **Persona & ODD** | Senior Architect teaching persona, ODD workflow, and commit standards | ✅ Complete |
 | **03** | **Intelligence & Memory** | Codegraph AST MCP catalog, Engram memory protocol, and 4R review framework | ✅ Complete |
 | **04** | **Skills & CLI Adapters** | Curated skills manifest, runtime adapters (Antigravity, Claude, Codex, OpenCode) & setup | ✅ Complete |
-| **05** | **Fleet Orchestration** | Multi-agent concurrency and distributed coordination via `herdr` | ⏳ Future |
+| **05** | **Multi-Agent Orchestration** | Cognitive tiers (Thinker, Worker, Sentinel), adaptive 2-speed ODD, and cross-runtime delegation | ✅ Complete |
 
 ---
 
