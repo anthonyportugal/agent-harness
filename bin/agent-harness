@@ -224,6 +224,7 @@ EOF
 )
       if [[ -n "$out_file" ]]; then
         mkdir -p "$(dirname "$out_file")"
+        rm -f "$out_file"
         printf '%s\n' "$buffer" > "$out_file"
         success "Assembled master rules written to $out_file"
       else
@@ -401,6 +402,26 @@ cmd_skills() {
       info "Syncing curated skills to ~/.agents/skills..."
       local skills_dir="${HOME}/.agents/skills"
       mkdir -p "$skills_dir"
+
+      if command -v jq >/dev/null 2>&1; then
+        local -A active_skills=()
+        local active_name
+        while IFS= read -r active_name; do
+          [[ -n "$active_name" ]] && active_skills["$active_name"]=1
+        done < <(jq -r '.skills[].name' "$manifest")
+
+        local skill_dir
+        for skill_dir in "$skills_dir"/*; do
+          [[ -d "$skill_dir" || -L "$skill_dir" ]] || continue
+          local skill_base
+          skill_base=$(basename "$skill_dir")
+          if [[ -z "${active_skills[$skill_base]:-}" ]]; then
+            info "Pruning obsolete ambient skill: $skill_dir"
+            rm -rf "$skill_dir"
+          fi
+        done
+      fi
+
       if command -v pnpm >/dev/null 2>&1; then
         local skill_src skill_name
         while IFS='|' read -r skill_name skill_src; do
@@ -700,6 +721,21 @@ EOF
         ;;
     esac
   done
+
+  if (( ! dry_run )); then
+    local receipt_file="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/agent-harness.receipt"
+    mkdir -p "$(dirname "$receipt_file")"
+    local tmp_receipt
+    tmp_receipt=$(mktemp "${receipt_file}.tmp.XXXXXX")
+    cat > "$tmp_receipt" <<RECEIPT_EOF
+RECEIPT_VERSION=1
+COMPONENT="agent-harness"
+TARGET="$target"
+UPDATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+RECEIPT_EOF
+    mv -f "$tmp_receipt" "$receipt_file"
+    success "State receipt saved to $receipt_file"
+  fi
 
   printf '\n'
   success "Setup completed successfully."

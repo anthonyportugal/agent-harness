@@ -89,6 +89,15 @@ echo "$rules_output" | grep -q 'Organic Driven Development' || fail "CLI rules a
 echo "$rules_output" | grep -q 'Multi-Agent Orchestration' || fail "CLI rules assemble is missing orchestration"
 echo "$rules_output" | grep -q '4R Architectural Review Protocol' || fail "CLI rules assemble is missing 4R"
 
+# Verify safe rule assembly overwrite over dangling symlink
+test_rules_dir=$(mktemp -d)
+test_symlink="$test_rules_dir/broken-rules.md"
+ln -s "/nonexistent/dangling/path" "$test_symlink"
+"$HARNESS_CLI" rules assemble "$test_symlink" >/dev/null || fail "CLI rules assemble failed to overwrite dangling symlink"
+[[ -f "$test_symlink" && ! -L "$test_symlink" ]] || fail "CLI rules assemble did not replace symlink with regular file"
+grep -q 'Unified AI Agent Instructions' "$test_symlink" || fail "CLI rules assemble file output missing header"
+rm -rf "$test_rules_dir"
+
 printf '  Verifying CLI mcp commands...\n'
 mcp_list=$("$HARNESS_CLI" mcp list)
 echo "$mcp_list" | grep -q 'codegraph' || fail "CLI mcp list is missing codegraph"
@@ -111,12 +120,46 @@ echo "$skills_list" | grep -q 'find-skills' || fail "CLI skills list is missing 
 echo "$skills_list" | grep -q 'cognitive-doc-design' || fail "CLI skills list is missing cognitive-doc-design"
 echo "$skills_list" | grep -q 'skill-creator' || fail "CLI skills list is missing skill-creator"
 
+# Verify two-way skill reconciliation (pruning obsolete skills)
+test_skills_home=$(mktemp -d)
+test_skills_dir="$test_skills_home/.agents/skills"
+mkdir -p "$test_skills_dir/obsolete-test-skill"
+mkdir -p "$test_skills_dir/find-docs"
+
+test_pnpm_bin=$(mktemp -d)
+cat > "$test_pnpm_bin/pnpm" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$test_pnpm_bin/pnpm"
+
+sync_output=$(PATH="$test_pnpm_bin:$PATH" HOME="$test_skills_home" "$HARNESS_CLI" skills sync)
+echo "$sync_output" | grep -q 'Pruning obsolete ambient skill: ' || fail "Skill sync did not log obsolete skill pruning"
+echo "$sync_output" | grep -q 'obsolete-test-skill' || fail "Skill sync did not prune obsolete-test-skill"
+[[ ! -d "$test_skills_dir/obsolete-test-skill" ]] || fail "Obsolete skill directory was not deleted"
+[[ -d "$test_skills_dir/find-docs" ]] || fail "Active skill directory was deleted"
+rm -rf "$test_skills_home" "$test_pnpm_bin"
+
 printf '  Verifying CLI setup dry-run command...\n'
 setup_output=$("$HARNESS_CLI" setup --dry-run --target all)
 echo "$setup_output" | grep -q 'antigravity-cli' || fail "CLI setup is missing antigravity-cli target"
 echo "$setup_output" | grep -q 'settings.json' || fail "CLI setup is missing claude settings.json target"
 echo "$setup_output" | grep -q 'config.toml' || fail "CLI setup is missing codex config.toml target"
 echo "$setup_output" | grep -q 'opencode.json' || fail "CLI setup is missing opencode.json target"
+
+printf '  Verifying CLI setup state receipt generation...\n'
+test_setup_home=$(mktemp -d)
+test_state_dir="$test_setup_home/.local/state"
+export XDG_STATE_HOME="$test_state_dir"
+HOME="$test_setup_home" "$HARNESS_CLI" setup --target antigravity-cli >/dev/null || fail "CLI setup failed during receipt test"
+receipt_path="$test_state_dir/dotfiles/agent-harness.receipt"
+[[ -f "$receipt_path" ]] || fail "State receipt file was not created"
+grep -q '^RECEIPT_VERSION=1$' "$receipt_path" || fail "State receipt missing RECEIPT_VERSION=1"
+grep -q '^COMPONENT="agent-harness"$' "$receipt_path" || fail "State receipt missing COMPONENT"
+grep -q '^TARGET="antigravity-cli"$' "$receipt_path" || fail "State receipt missing TARGET"
+grep -q '^UPDATED_AT=' "$receipt_path" || fail "State receipt missing UPDATED_AT"
+rm -rf "$test_setup_home"
+unset XDG_STATE_HOME
 
 # 7. Verify .gitignore protection
 printf '  Checking .gitignore guards...\n'
