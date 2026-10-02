@@ -550,15 +550,17 @@ cmd_setup() {
     info "Configuring Agent Runtime: $current_target..."
     case "$current_target" in
       antigravity-cli)
-        local agy_cfg="${HOME}/.gemini/antigravity-cli/mcp_config.json"
-        local agy_rules="${HOME}/.gemini/antigravity-cli/rules/agent-harness.md"
+        local agy_cfg="${HOME}/.gemini/config/mcp_config.json"
+        local agy_compat_cfg="${HOME}/.gemini/antigravity-cli/mcp_config.json"
+        local agy_rules="${HOME}/.gemini/GEMINI.md"
+        local agy_compat_rules="${HOME}/.gemini/antigravity-cli/rules/agent-harness.md"
         local agy_skills_json="${HOME}/.gemini/config/skills.json"
         if (( dry_run )); then
           printf '  [DRY-RUN] Would update MCP servers in %s\n' "$agy_cfg"
           printf '  [DRY-RUN] Would compile rules to %s\n' "$agy_rules"
           printf '  [DRY-RUN] Would configure skills discovery in %s\n' "$agy_skills_json"
         else
-          mkdir -p "$(dirname "$agy_cfg")" "$(dirname "$agy_rules")" "$(dirname "$agy_skills_json")" "${HOME}/.gemini/antigravity-cli"
+          mkdir -p "$(dirname "$agy_cfg")" "$(dirname "$agy_compat_rules")" "$(dirname "$agy_skills_json")" "${HOME}/.gemini/antigravity-cli"
           if [[ -f "$agy_cfg" ]] && command -v jq >/dev/null 2>&1; then
             local tmp_agy
             tmp_agy=$(mktemp)
@@ -572,7 +574,10 @@ cmd_setup() {
             cmd_mcp config antigravity-cli > "$agy_cfg"
             printf '  %b[OK]%b Created %s\n' "$C_GREEN" "$C_RESET" "$agy_cfg"
           fi
+          cp -f "$agy_cfg" "$agy_compat_cfg"
           cmd_rules assemble "$agy_rules" >/dev/null
+          cp -f "$agy_rules" "$agy_compat_rules"
+          rm -f "${HOME}/.gemini/AGENTS.md"
           printf '  %b[OK]%b Installed rules in %s\n' "$C_GREEN" "$C_RESET" "$agy_rules"
           cat > "$agy_skills_json" <<'EOF'
 {
